@@ -1,0 +1,52 @@
+<view class="skeleton-container">
+  <!-- 列表骨架屏 -->
+  <block wx:if="{{type === 'list'}}">
+    <view class="skeleton-list-item" wx:for="{{countArray}}" wx:key="*this">
+      <view class="skeleton-avatar shimmer"></view>
+      <view class="skeleton-content">
+        <view class="skeleton-title shimmer"></view>
+        <view class="skeleton-text shimmer"></view>
+      </view>
+    </view>
+  </block>
+  
+  <!-- 网格骨架屏 -->
+  <block wx:elif="{{type === 'grid'}}">
+    <view class="skeleton-grid">
+      <view class="skeleton-grid-item" wx:for="{{countArray}}" wx:key="*this">
+        <view class="skeleton-image shimmer"></view>
+        <view class="skeleton-caption shimmer"></view>
+      </view>
+    </view>
+  </block>
+  
+  <!-- 卡片骨架屏 -->
+  <block wx:elif="{{type === 'card'}}">
+    <view class="skeleton-card" wx:for="{{countArray}}" wx:key="*this">
+      <view class="skeleton-card-image shimmer"></view>
+      <view class="skeleton-card-content">
+        <view class="skeleton-title shimmer"></view>
+        <view class="skeleton-text shimmer" style="width: 60%"></view>
+      </view>
+    </view>
+  </block>
+  
+  <!-- 详情骨架屏 -->
+  <block wx:elif="{{type === 'detail'}}">
+    <view class="skeleton-detail">
+      <view class="skeleton-detail-image shimmer"></view>
+      <view class="skeleton-detail-info">
+        <view class="skeleton-title shimmer" style="width: 70%"></view>
+        <view class="skeleton-text shimmer"></view>
+        <view class="skeleton-text shimmer" style="width: 50%"></view>
+      </view>
+    </view>
+  </block>
+  
+  <!-- 默认骨架屏 -->
+  <block wx:else>
+    <view class="skeleton-default" wx:for="{{countArray}}" wx:key="*this">
+      <view class="skeleton-line shimmer"></view>
+    </view>
+  </block>
+</view>

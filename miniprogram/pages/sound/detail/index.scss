@@ -1,0 +1,218 @@
+@import '../../../styles/variables.scss';
+@import '../../../styles/mixins.scss';
+
+.page-container {
+  min-height: 100vh;
+  background-color: $color-bg-primary;
+}
+
+.detail-content {
+  padding-bottom: 200rpx;
+}
+
+.cover-area {
+  position: relative;
+  width: 100%;
+  padding: $spacing-xl;
+  @include flex-center;
+  background: linear-gradient(180deg, $color-bg-secondary 0%, $color-bg-primary 100%);
+}
+
+.cover-image {
+  width: 400rpx;
+  height: 400rpx;
+  border-radius: $radius-lg;
+  box-shadow: $shadow-lg;
+}
+
+.play-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  @include flex-center;
+}
+
+.play-btn {
+  width: 120rpx;
+  height: 120rpx;
+  border-radius: 50%;
+  background-color: rgba(47, 129, 247, 0.9);
+  @include flex-center;
+  @include tap-highlight;
+  transition: $transition-normal;
+  
+  &.playing {
+    background-color: rgba(47, 129, 247, 0.7);
+    animation: pulse 1.5s infinite;
+  }
+  
+  text {
+    font-size: 48rpx;
+    color: #fff;
+    margin-left: 8rpx;
+  }
+}
+
+@keyframes pulse {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.05); }
+}
+
+.player-bar {
+  display: flex;
+  align-items: center;
+  padding: $spacing-md $spacing-lg;
+  gap: $spacing-sm;
+}
+
+.time-text {
+  font-size: $font-size-xs;
+  color: $color-text-tertiary;
+  min-width: 60rpx;
+  text-align: center;
+}
+
+.progress-slider {
+  flex: 1;
+}
+
+.info-card {
+  margin: $spacing-md;
+  padding: $spacing-md;
+  background-color: $color-bg-card;
+  border-radius: $radius-lg;
+}
+
+.sound-title {
+  display: block;
+  font-size: $font-size-lg;
+  font-weight: 600;
+  color: $color-text-primary;
+  margin-bottom: $spacing-md;
+}
+
+.info-row {
+  @include flex-between;
+  padding: $spacing-xs 0;
+  border-bottom: 1rpx solid $color-border-light;
+  
+  &:last-child {
+    border-bottom: none;
+  }
+}
+
+.info-label {
+  font-size: $font-size-sm;
+  color: $color-text-tertiary;
+}
+
+.info-value {
+  font-size: $font-size-sm;
+  color: $color-text-secondary;
+}
+
+.action-bar {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  display: flex;
+  gap: $spacing-sm;
+  padding: $spacing-md;
+  padding-bottom: calc(#{$spacing-md} + constant(safe-area-inset-bottom));
+  padding-bottom: calc(#{$spacing-md} + env(safe-area-inset-bottom));
+  background-color: $color-bg-secondary;
+  border-top: 1rpx solid $color-border;
+}
+
+.action-btn {
+  flex: 1;
+  @include flex-center;
+  flex-direction: column;
+  padding: $spacing-sm;
+  background-color: $color-bg-tertiary;
+  border-radius: $radius-md;
+  @include tap-highlight;
+  
+  &.primary {
+    flex: 2;
+    background-color: $color-primary;
+    
+    .action-text {
+      color: #fff;
+    }
+  }
+  
+  &.active {
+    .action-icon {
+      transform: scale(1.1);
+    }
+  }
+}
+
+.action-icon {
+  font-size: 36rpx;
+  margin-bottom: 4rpx;
+  transition: $transition-fast;
+}
+
+.action-text {
+  font-size: $font-size-xs;
+  color: $color-text-secondary;
+}
+
+// 相似推荐
+.recommend-section {
+  margin: $spacing-md;
+  margin-bottom: 200rpx;
+}
+
+.section-title {
+  display: block;
+  font-size: $font-size-base;
+  font-weight: 600;
+  color: $color-text-primary;
+  margin-bottom: $spacing-md;
+}
+
+.recommend-list {
+  display: flex;
+  flex-direction: column;
+  gap: $spacing-sm;
+}
+
+.recommend-item {
+  display: flex;
+  align-items: center;
+  padding: $spacing-sm;
+  background-color: $color-bg-card;
+  border-radius: $radius-lg;
+  @include tap-highlight;
+}
+
+.recommend-cover {
+  width: 80rpx;
+  height: 80rpx;
+  border-radius: $radius-md;
+  background-color: $color-bg-tertiary;
+  flex-shrink: 0;
+}
+
+.recommend-info {
+  flex: 1;
+  margin-left: $spacing-sm;
+}
+
+.recommend-title {
+  display: block;
+  font-size: $font-size-sm;
+  color: $color-text-primary;
+  @include ellipsis(1);
+}
+
+.recommend-meta {
+  font-size: $font-size-xs;
+  color: $color-text-tertiary;
+}

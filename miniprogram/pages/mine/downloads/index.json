@@ -1,0 +1,6 @@
+{
+  "usingComponents": {
+    "empty": "/components/empty/index"
+  },
+  "navigationBarTitleText": "下载记录"
+}

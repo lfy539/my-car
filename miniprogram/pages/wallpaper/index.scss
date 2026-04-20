@@ -1,0 +1,89 @@
+@import '../../styles/variables.scss';
+@import '../../styles/mixins.scss';
+
+.page-container {
+  @include page-container;
+}
+
+.content-wrapper {
+  padding: $spacing-md;
+}
+
+// 筛选栏
+.filter-bar {
+  display: flex;
+  white-space: nowrap;
+  margin: 0 (-$spacing-md);
+  margin-bottom: $spacing-md;
+  padding: $spacing-sm $spacing-md;
+  background-color: $color-bg-secondary;
+}
+
+.filter-item {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 100rpx;
+  height: 64rpx;
+  padding: 0 $spacing-lg;
+  margin-right: $spacing-md;
+  background-color: $color-bg-tertiary;
+  border-radius: $radius-full;
+  font-size: $font-size-sm;
+  color: $color-text-secondary;
+  border: 2rpx solid transparent;
+  transition: all 0.2s ease;
+  @include tap-highlight;
+  
+  &.active {
+    background-color: $color-primary;
+    color: #fff;
+    font-weight: 500;
+    box-shadow: 0 4rpx 12rpx rgba(47, 129, 247, 0.3);
+  }
+  
+  &:last-child {
+    margin-right: $spacing-lg;
+  }
+}
+
+// 壁纸网格
+.wallpaper-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: $spacing-md;
+}
+
+.wallpaper-item {
+  border-radius: $radius-lg;
+  overflow: hidden;
+  background-color: $color-bg-card;
+  @include tap-highlight;
+}
+
+.wallpaper-image {
+  width: 100%;
+  height: 280rpx;
+  background-color: $color-bg-tertiary;
+}
+
+.wallpaper-info {
+  padding: $spacing-sm;
+}
+
+.wallpaper-title {
+  font-size: $font-size-sm;
+  color: $color-text-secondary;
+  @include ellipsis(1);
+}
+
+// 加载更多
+.load-more {
+  @include flex-center;
+  padding: $spacing-lg;
+  
+  text {
+    font-size: $font-size-sm;
+    color: $color-text-tertiary;
+  }
+}

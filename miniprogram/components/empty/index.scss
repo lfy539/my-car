@@ -1,0 +1,54 @@
+@import '../../styles/variables.scss';
+@import '../../styles/mixins.scss';
+
+.empty-container {
+  @include flex-center;
+  flex-direction: column;
+  padding: $spacing-xl;
+  min-height: 400rpx;
+}
+
+.empty-image {
+  width: 200rpx;
+  height: 200rpx;
+  margin-bottom: $spacing-lg;
+  opacity: 0.6;
+}
+
+.empty-icon {
+  width: 200rpx;
+  height: 200rpx;
+  line-height: 200rpx;
+  text-align: center;
+  margin-bottom: $spacing-lg;
+  color: $color-text-tertiary;
+  font-size: 120rpx;
+  font-weight: 400;
+  opacity: 0.7;
+}
+
+.empty-title {
+  font-size: $font-size-base;
+  color: $color-text-secondary;
+  margin-bottom: $spacing-sm;
+}
+
+.empty-desc {
+  font-size: $font-size-sm;
+  color: $color-text-tertiary;
+  text-align: center;
+  max-width: 80%;
+}
+
+.empty-action {
+  margin-top: $spacing-lg;
+  padding: $spacing-sm $spacing-lg;
+  background-color: $color-primary;
+  border-radius: $radius-full;
+  @include tap-highlight;
+  
+  .action-text {
+    font-size: $font-size-sm;
+    color: #fff;
+  }
+}

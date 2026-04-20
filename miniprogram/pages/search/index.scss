@@ -1,0 +1,279 @@
+@import '../../styles/variables.scss';
+@import '../../styles/mixins.scss';
+
+.page-container {
+  min-height: 100vh;
+  background-color: $color-bg-primary;
+}
+
+// 搜索头部
+.search-header {
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  display: flex;
+  align-items: center;
+  padding: $spacing-sm $spacing-md;
+  background-color: $color-bg-secondary;
+  border-bottom: 1rpx solid $color-border;
+}
+
+.search-box {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  height: 72rpx;
+  padding: 0 $spacing-md;
+  background-color: $color-bg-tertiary;
+  border-radius: $radius-full;
+}
+
+.search-icon {
+  font-size: 28rpx;
+  margin-right: $spacing-sm;
+}
+
+.search-input {
+  flex: 1;
+  font-size: $font-size-base;
+  color: $color-text-primary;
+}
+
+.clear-icon {
+  font-size: 32rpx;
+  color: $color-text-tertiary;
+  padding: $spacing-xs;
+}
+
+.cancel-btn {
+  margin-left: $spacing-md;
+  font-size: $font-size-base;
+  color: $color-primary;
+  @include tap-highlight;
+}
+
+// 搜索建议
+.suggestions {
+  background-color: $color-bg-secondary;
+  border-bottom: 1rpx solid $color-border;
+}
+
+.suggestion-item {
+  display: flex;
+  align-items: center;
+  padding: $spacing-md;
+  border-bottom: 1rpx solid $color-border-light;
+  @include tap-highlight;
+  
+  &:last-child {
+    border-bottom: none;
+  }
+}
+
+.suggestion-icon {
+  font-size: 24rpx;
+  color: $color-text-tertiary;
+  margin-right: $spacing-sm;
+}
+
+.suggestion-text {
+  font-size: $font-size-base;
+  color: $color-text-primary;
+}
+
+// 搜索首页
+.search-home {
+  padding: $spacing-md;
+}
+
+.section {
+  margin-bottom: $spacing-lg;
+}
+
+.section-header {
+  @include flex-between;
+  margin-bottom: $spacing-md;
+}
+
+.section-title {
+  font-size: $font-size-base;
+  font-weight: 600;
+  color: $color-text-primary;
+}
+
+.section-action {
+  font-size: $font-size-sm;
+  color: $color-text-tertiary;
+  @include tap-highlight;
+}
+
+// 历史标签
+.tag-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: $spacing-sm;
+}
+
+.tag-item {
+  padding: $spacing-xs $spacing-md;
+  background-color: $color-bg-tertiary;
+  border-radius: $radius-full;
+  font-size: $font-size-sm;
+  color: $color-text-secondary;
+  @include tap-highlight;
+}
+
+// 热门搜索
+.hot-list {
+  display: flex;
+  flex-direction: column;
+}
+
+.hot-item {
+  display: flex;
+  align-items: center;
+  padding: $spacing-sm 0;
+  @include tap-highlight;
+}
+
+.hot-rank {
+  width: 40rpx;
+  font-size: $font-size-sm;
+  color: $color-text-tertiary;
+  
+  &.top {
+    color: $color-primary;
+    font-weight: 600;
+  }
+}
+
+.hot-text {
+  flex: 1;
+  font-size: $font-size-base;
+  color: $color-text-primary;
+}
+
+.hot-badge {
+  padding: 2rpx 8rpx;
+  background-color: $color-error;
+  border-radius: $radius-xs;
+  font-size: $font-size-xs;
+  color: #fff;
+}
+
+// 搜索结果
+.search-results {
+  padding: $spacing-md;
+}
+
+.result-tabs {
+  display: flex;
+  margin-bottom: $spacing-md;
+  padding-bottom: $spacing-sm;
+  border-bottom: 1rpx solid $color-border;
+}
+
+.tab-item {
+  margin-right: $spacing-lg;
+  padding-bottom: $spacing-sm;
+  font-size: $font-size-sm;
+  color: $color-text-tertiary;
+  position: relative;
+  @include tap-highlight;
+  
+  &.active {
+    color: $color-primary;
+    font-weight: 500;
+    
+    &::after {
+      content: '';
+      position: absolute;
+      bottom: -$spacing-sm;
+      left: 0;
+      right: 0;
+      height: 4rpx;
+      background-color: $color-primary;
+      border-radius: 2rpx;
+    }
+  }
+}
+
+.result-section {
+  margin-bottom: $spacing-lg;
+}
+
+.result-section-title {
+  display: block;
+  font-size: $font-size-sm;
+  color: $color-text-tertiary;
+  margin-bottom: $spacing-sm;
+}
+
+// 壁纸网格
+.wallpaper-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: $spacing-md;
+}
+
+.wallpaper-item {
+  border-radius: $radius-lg;
+  overflow: hidden;
+  background-color: $color-bg-card;
+  @include tap-highlight;
+}
+
+.wallpaper-cover {
+  width: 100%;
+  height: 200rpx;
+  background-color: $color-bg-tertiary;
+}
+
+.wallpaper-title {
+  display: block;
+  padding: $spacing-xs $spacing-sm;
+  font-size: $font-size-sm;
+  color: $color-text-secondary;
+  @include ellipsis(1);
+}
+
+// 音效列表
+.sound-list {
+  display: flex;
+  flex-direction: column;
+  gap: $spacing-sm;
+}
+
+.sound-item {
+  display: flex;
+  align-items: center;
+  padding: $spacing-sm;
+  background-color: $color-bg-card;
+  border-radius: $radius-lg;
+  @include tap-highlight;
+}
+
+.sound-cover {
+  width: 80rpx;
+  height: 80rpx;
+  border-radius: $radius-md;
+  background-color: $color-bg-tertiary;
+  flex-shrink: 0;
+}
+
+.sound-info {
+  flex: 1;
+  margin-left: $spacing-sm;
+}
+
+.sound-title {
+  display: block;
+  font-size: $font-size-base;
+  color: $color-text-primary;
+  @include ellipsis(1);
+}
+
+.sound-meta {
+  font-size: $font-size-xs;
+  color: $color-text-tertiary;
+}

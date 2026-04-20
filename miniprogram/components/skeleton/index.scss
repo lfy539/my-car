@@ -1,0 +1,139 @@
+@import '../../styles/variables.scss';
+
+.skeleton-container {
+  padding: $spacing-md;
+}
+
+// 闪烁动画
+.shimmer {
+  background: linear-gradient(
+    90deg,
+    $color-bg-tertiary 25%,
+    lighten($color-bg-tertiary, 5%) 50%,
+    $color-bg-tertiary 75%
+  );
+  background-size: 200% 100%;
+  animation: shimmer 1.5s infinite;
+}
+
+@keyframes shimmer {
+  0% {
+    background-position: 200% 0;
+  }
+  100% {
+    background-position: -200% 0;
+  }
+}
+
+// 列表样式
+.skeleton-list-item {
+  display: flex;
+  align-items: center;
+  margin-bottom: $spacing-md;
+}
+
+.skeleton-avatar {
+  width: 100rpx;
+  height: 100rpx;
+  border-radius: $radius-md;
+  flex-shrink: 0;
+}
+
+.skeleton-content {
+  flex: 1;
+  margin-left: $spacing-md;
+}
+
+.skeleton-title {
+  height: 32rpx;
+  border-radius: $radius-xs;
+  margin-bottom: $spacing-sm;
+  width: 60%;
+}
+
+.skeleton-text {
+  height: 24rpx;
+  border-radius: $radius-xs;
+  width: 80%;
+}
+
+// 网格样式
+.skeleton-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: $spacing-md;
+}
+
+.skeleton-grid-item {
+  border-radius: $radius-lg;
+  overflow: hidden;
+  background-color: $color-bg-card;
+}
+
+.skeleton-image {
+  width: 100%;
+  height: 200rpx;
+}
+
+.skeleton-caption {
+  height: 28rpx;
+  margin: $spacing-sm;
+  border-radius: $radius-xs;
+}
+
+// 卡片样式
+.skeleton-card {
+  display: flex;
+  align-items: center;
+  padding: $spacing-md;
+  margin-bottom: $spacing-md;
+  background-color: $color-bg-card;
+  border-radius: $radius-lg;
+}
+
+.skeleton-card-image {
+  width: 120rpx;
+  height: 120rpx;
+  border-radius: $radius-md;
+  flex-shrink: 0;
+}
+
+.skeleton-card-content {
+  flex: 1;
+  margin-left: $spacing-md;
+}
+
+// 详情样式
+.skeleton-detail {
+  .skeleton-detail-image {
+    width: 100%;
+    height: 500rpx;
+    border-radius: $radius-lg;
+    margin-bottom: $spacing-md;
+  }
+  
+  .skeleton-detail-info {
+    padding: $spacing-md;
+    background-color: $color-bg-card;
+    border-radius: $radius-lg;
+    
+    .skeleton-title {
+      height: 40rpx;
+      margin-bottom: $spacing-md;
+    }
+    
+    .skeleton-text {
+      margin-bottom: $spacing-sm;
+    }
+  }
+}
+
+// 默认样式
+.skeleton-default {
+  margin-bottom: $spacing-sm;
+}
+
+.skeleton-line {
+  height: 28rpx;
+  border-radius: $radius-xs;
+}

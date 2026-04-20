@@ -1,0 +1,88 @@
+// ============================================
+// 机车美化库 - 深色主题变量
+// ============================================
+
+// 主色调
+$color-primary: #2F81F7;
+$color-primary-light: #58A6FF;
+$color-primary-dark: #1F6FEB;
+
+// 功能色
+$color-success: #3FB950;
+$color-warning: #D29922;
+$color-error: #F85149;
+$color-info: #8B949E;
+
+// 背景色
+$color-bg-primary: #0D1117;
+$color-bg-secondary: #161B22;
+$color-bg-tertiary: #21262D;
+$color-bg-card: #1C2128;
+$color-bg-hover: #30363D;
+
+// 文字色
+$color-text-primary: #F0F6FC;
+$color-text-secondary: #C9D1D9;
+$color-text-tertiary: #8B949E;
+$color-text-placeholder: #6E7681;
+$color-text-disabled: #484F58;
+
+// 边框色
+$color-border: #30363D;
+$color-border-light: #21262D;
+$color-border-active: #58A6FF;
+
+// 阴影
+$shadow-sm: 0 2rpx 8rpx rgba(0, 0, 0, 0.3);
+$shadow-md: 0 4rpx 16rpx rgba(0, 0, 0, 0.4);
+$shadow-lg: 0 8rpx 32rpx rgba(0, 0, 0, 0.5);
+
+// 圆角
+$radius-xs: 8rpx;
+$radius-sm: 12rpx;
+$radius-md: 16rpx;
+$radius-lg: 24rpx;
+$radius-xl: 32rpx;
+$radius-full: 9999rpx;
+
+// 间距
+$spacing-xs: 8rpx;
+$spacing-sm: 16rpx;
+$spacing-md: 24rpx;
+$spacing-lg: 32rpx;
+$spacing-xl: 48rpx;
+
+// 字体大小
+$font-size-xs: 20rpx;
+$font-size-sm: 24rpx;
+$font-size-md: 28rpx;
+$font-size-base: 32rpx;
+$font-size-lg: 36rpx;
+$font-size-xl: 40rpx;
+$font-size-2xl: 48rpx;
+$font-size-3xl: 56rpx;
+
+// 行高
+$line-height-tight: 1.25;
+$line-height-normal: 1.5;
+$line-height-relaxed: 1.75;
+
+// 过渡
+$transition-fast: 150ms ease;
+$transition-normal: 250ms ease;
+$transition-slow: 350ms ease;
+
+// 安全区域
+$safe-area-bottom: env(safe-area-inset-bottom);
+$safe-area-top: env(safe-area-inset-top);
+
+// TabBar 高度
+$tab-bar-height: 100rpx;
+
+// 品牌色（车型品牌）
+$color-brand-tesla: #CC0000;
+$color-brand-byd: #0066CC;
+$color-brand-nio: #00A0E9;
+$color-brand-xpeng: #00D68F;
+$color-brand-li: #0066FF;
+$color-brand-leapmotor: #FF6B00;

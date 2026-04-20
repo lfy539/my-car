@@ -1,0 +1,6 @@
+{
+  "usingComponents": {
+    "empty": "/components/empty/index"
+  },
+  "navigationBarTitleText": "我的收藏"
+}

@@ -1,0 +1,10 @@
+{
+  "usingComponents": {
+    "tab-bar": "/components/tab-bar/index",
+    "card": "/components/card/index",
+    "loading": "/components/loading/index",
+    "error": "/components/error/index",
+    "empty": "/components/empty/index"
+  },
+  "navigationBarTitleText": "车机美化库"
+}

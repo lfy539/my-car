@@ -1,0 +1,145 @@
+@import '../../styles/variables.scss';
+@import '../../styles/mixins.scss';
+
+.page-container {
+  @include page-container;
+}
+
+.content-wrapper {
+  padding: $spacing-md;
+}
+
+// 用户卡片
+.user-card {
+  @include card-style;
+  padding: $spacing-lg;
+  margin-bottom: $spacing-md;
+}
+
+.user-info {
+  display: flex;
+  align-items: center;
+}
+
+.avatar-wrap {
+  width: 120rpx;
+  height: 120rpx;
+  border-radius: 50%;
+  background-color: $color-bg-tertiary;
+  @include flex-center;
+  
+  &.login {
+    background-color: $color-primary;
+    opacity: 0.8;
+  }
+  
+  .avatar-emoji {
+    font-size: 60rpx;
+  }
+}
+
+.user-detail {
+  margin-left: $spacing-md;
+}
+
+.user-name {
+  display: block;
+  font-size: $font-size-lg;
+  font-weight: 600;
+  color: $color-text-primary;
+  margin-bottom: 4rpx;
+}
+
+.user-id {
+  font-size: $font-size-xs;
+  color: $color-text-tertiary;
+}
+
+.user-login {
+  display: flex;
+  align-items: center;
+  flex-direction: column;
+  padding: $spacing-md;
+  background-color: transparent;
+  border: none;
+  
+  &::after {
+    display: none;
+  }
+}
+
+.login-text {
+  font-size: $font-size-base;
+  color: $color-primary;
+  margin-top: $spacing-sm;
+}
+
+// 菜单
+.menu-section {
+  @include card-style;
+  padding: 0;
+  margin-bottom: $spacing-md;
+  overflow: hidden;
+}
+
+.menu-item {
+  display: flex;
+  align-items: center;
+  padding: $spacing-md $spacing-lg;
+  border-bottom: 1rpx solid $color-border-light;
+  @include tap-highlight;
+  
+  &:last-child {
+    border-bottom: none;
+  }
+}
+
+.menu-icon {
+  font-size: 40rpx;
+  margin-right: $spacing-md;
+}
+
+.menu-text {
+  flex: 1;
+  font-size: $font-size-base;
+  color: $color-text-primary;
+}
+
+.menu-arrow {
+  font-size: $font-size-xl;
+  color: $color-text-tertiary;
+}
+
+// 调试区
+.debug-section {
+  @include card-style;
+  padding: 0;
+  margin-bottom: $spacing-md;
+  overflow: hidden;
+}
+
+.health-result {
+  padding: $spacing-md;
+  background-color: $color-bg-tertiary;
+  
+  text {
+    font-size: $font-size-sm;
+    color: $color-success;
+    font-family: monospace;
+  }
+}
+
+// 退出按钮
+.logout-btn {
+  @include flex-center;
+  height: 88rpx;
+  background-color: $color-bg-card;
+  border-radius: $radius-lg;
+  margin-top: $spacing-xl;
+  @include tap-highlight;
+  
+  text {
+    font-size: $font-size-base;
+    color: $color-error;
+  }
+}

@@ -1,0 +1,41 @@
+<view class="page-container">
+  <empty wx:if="{{list.length === 0}}" title="暂无下载记录" description="下载的壁纸和音效会显示在这里" />
+  
+  <view wx:else class="download-list">
+    <view 
+      class="download-item"
+      wx:for="{{list}}"
+      wx:key="id"
+      bindtap="onItemTap"
+      data-item="{{item}}"
+    >
+      <image class="item-cover" src="{{item.coverUrl}}" mode="aspectFill" />
+      <view class="item-info">
+        <text class="item-title">{{item.title}}</text>
+        <view class="item-meta">
+          <text class="item-type">{{item.type === 'wallpaper' ? '壁纸' : '音效'}}</text>
+          <text class="item-time">{{formatTime(item.downloadAt)}}</text>
+        </view>
+      </view>
+      <view class="item-status">
+        <text class="status-icon">✓</text>
+      </view>
+    </view>
+  </view>
+  
+  <view class="clear-btn" wx:if="{{list.length > 0}}" bindtap="onClearAll">
+    <text>清空下载记录</text>
+  </view>
+</view>
+
+<wxs module="formatTime">
+module.exports = function(timestamp) {
+  if (!timestamp) return '';
+  var date = getDate(timestamp);
+  var month = date.getMonth() + 1;
+  var day = date.getDate();
+  var hour = date.getHours();
+  var minute = date.getMinutes();
+  return month + '/' + day + ' ' + (hour < 10 ? '0' : '') + hour + ':' + (minute < 10 ? '0' : '') + minute;
+}
+</wxs>

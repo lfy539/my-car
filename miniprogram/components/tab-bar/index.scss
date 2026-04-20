@@ -1,0 +1,57 @@
+@import '../../styles/variables.scss';
+@import '../../styles/mixins.scss';
+
+.tab-bar {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 110rpx;
+  background-color: $color-bg-secondary;
+  border-top: 1rpx solid $color-border;
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-around;
+  padding-top: 16rpx;
+  padding-bottom: constant(safe-area-inset-bottom);
+  padding-bottom: env(safe-area-inset-bottom);
+  z-index: 999;
+  box-sizing: content-box;
+}
+
+.tab-item {
+  flex: 1;
+  @include flex-center;
+  flex-direction: column;
+  transition: $transition-fast;
+  
+  &.active {
+    .tab-icon .icon-emoji {
+      transform: scale(1.1);
+    }
+    
+    .tab-text {
+      color: $color-primary;
+    }
+  }
+}
+
+.tab-icon {
+  width: 44rpx;
+  height: 44rpx;
+  margin-bottom: 4rpx;
+  @include flex-center;
+  
+  .icon-emoji {
+    font-size: 36rpx;
+    line-height: 1;
+    transition: $transition-fast;
+  }
+}
+
+.tab-text {
+  font-size: 20rpx;
+  color: $color-text-tertiary;
+  transition: $transition-fast;
+  line-height: 1.2;
+}

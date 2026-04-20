@@ -1,0 +1,105 @@
+<view class="page-container">
+  <!-- 加载状态 -->
+  <loading wx:if="{{loading}}" fullscreen text="加载中..." />
+  
+  <!-- 错误状态 -->
+  <error wx:elif="{{error}}" title="加载失败" description="{{error}}" bind:retry="loadData" />
+  
+  <!-- 正常内容 -->
+  <view wx:else class="content-wrapper">
+    <!-- 搜索入口 -->
+    <view class="search-entry" bindtap="goToSearch">
+      <text class="search-icon">🔍</text>
+      <text class="search-placeholder">搜索壁纸、音效...</text>
+    </view>
+    
+    <!-- 轮播图 -->
+    <swiper 
+      class="banner-swiper"
+      indicator-dots
+      autoplay
+      circular
+      indicator-color="rgba(255,255,255,0.3)"
+      indicator-active-color="#2F81F7"
+    >
+      <swiper-item wx:for="{{banners}}" wx:key="_id">
+        <image class="banner-image" src="{{item.imageUrl}}" mode="aspectFill" />
+      </swiper-item>
+      <!-- 默认占位 -->
+      <swiper-item wx:if="{{banners.length === 0}}">
+        <view class="banner-placeholder"></view>
+      </swiper-item>
+    </swiper>
+    
+    <!-- 快捷入口 -->
+    <card title="快捷入口">
+      <view class="quick-entry">
+        <view class="entry-item" bindtap="goToWallpaper">
+          <view class="entry-icon wallpaper-icon">
+            <text class="icon-text">🖼</text>
+          </view>
+          <text class="entry-text">精选壁纸</text>
+        </view>
+        <view class="entry-item" bindtap="goToSound">
+          <view class="entry-icon sound-icon">
+            <text class="icon-text">🎵</text>
+          </view>
+          <text class="entry-text">个性音效</text>
+        </view>
+        <view class="entry-item" bindtap="goToFavorites">
+          <view class="entry-icon favorite-icon">
+            <text class="icon-text">⭐</text>
+          </view>
+          <text class="entry-text">我的收藏</text>
+        </view>
+      </view>
+    </card>
+    
+    <!-- 按车型浏览 -->
+    <card title="按车型浏览" extra="查看全部" bind:extratap="goToAllBrands">
+      <view class="brand-grid">
+        <view 
+          class="brand-item {{currentBrandId === item._id ? 'active' : ''}}"
+          wx:for="{{brands}}"
+          wx:key="_id"
+          bindtap="onBrandTap"
+          data-id="{{item._id}}"
+        >
+          <text class="brand-name">{{item.name}}</text>
+        </view>
+      </view>
+    </card>
+    
+    <!-- 热门音效 -->
+    <card title="热门音效" extra="更多" bind:extratap="goToSound">
+      <view class="sound-list">
+        <view 
+          class="sound-item"
+          wx:for="{{hotSounds}}"
+          wx:key="_id"
+          bindtap="onSoundTap"
+          data-item="{{item}}"
+        >
+          <view class="sound-cover">
+            <image class="cover-img" src="{{item.coverUrl}}" mode="aspectFill" />
+            <view class="play-btn">
+              <text>▶</text>
+            </view>
+          </view>
+          <view class="sound-info">
+            <text class="sound-title">{{item.title}}</text>
+            <text class="sound-meta">{{item.soundType}} · {{item.duration}}s</text>
+          </view>
+        </view>
+      </view>
+    </card>
+    
+    <!-- 底部标语 -->
+    <view class="footer-slogan">
+      <text>电车专属美化库 · 打造专属移动座舱</text>
+    </view>
+  </view>
+  
+  <!-- 自定义 TabBar -->
+  <tab-bar currentTab="pages/index/index" />
+</view>

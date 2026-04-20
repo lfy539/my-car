@@ -1,0 +1,185 @@
+@import '../../../styles/variables.scss';
+@import '../../../styles/mixins.scss';
+
+.page-container {
+  min-height: 100vh;
+  background-color: $color-bg-primary;
+}
+
+.detail-content {
+  padding-bottom: 200rpx;
+}
+
+.preview-area {
+  position: relative;
+  width: 100%;
+  height: 70vh;
+  background-color: $color-bg-secondary;
+  
+  .preview-image {
+    width: 100%;
+    height: 100%;
+  }
+  
+  .preview-tip {
+    position: absolute;
+    bottom: 30rpx;
+    left: 50%;
+    transform: translateX(-50%);
+    padding: 12rpx 24rpx;
+    background-color: rgba(0, 0, 0, 0.6);
+    border-radius: $radius-full;
+    
+    text {
+      font-size: $font-size-xs;
+      color: #fff;
+    }
+  }
+}
+
+.info-card {
+  margin: $spacing-md;
+  padding: $spacing-md;
+  background-color: $color-bg-card;
+  border-radius: $radius-lg;
+}
+
+.wallpaper-title {
+  display: block;
+  font-size: $font-size-lg;
+  font-weight: 600;
+  color: $color-text-primary;
+  margin-bottom: $spacing-md;
+}
+
+.info-row {
+  @include flex-between;
+  padding: $spacing-xs 0;
+  border-bottom: 1rpx solid $color-border-light;
+  
+  &:last-of-type {
+    border-bottom: none;
+  }
+}
+
+.info-label {
+  font-size: $font-size-sm;
+  color: $color-text-tertiary;
+}
+
+.info-value {
+  font-size: $font-size-sm;
+  color: $color-text-secondary;
+}
+
+.tags-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: $spacing-xs;
+  margin-top: $spacing-sm;
+  
+  .tag {
+    padding: 4rpx 16rpx;
+    background-color: $color-bg-tertiary;
+    border-radius: $radius-sm;
+    font-size: $font-size-xs;
+    color: $color-text-secondary;
+  }
+}
+
+.action-bar {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  display: flex;
+  gap: $spacing-sm;
+  padding: $spacing-md;
+  padding-bottom: calc(#{$spacing-md} + constant(safe-area-inset-bottom));
+  padding-bottom: calc(#{$spacing-md} + env(safe-area-inset-bottom));
+  background-color: $color-bg-secondary;
+  border-top: 1rpx solid $color-border;
+}
+
+.action-btn {
+  flex: 1;
+  @include flex-center;
+  flex-direction: column;
+  padding: $spacing-sm;
+  background-color: $color-bg-tertiary;
+  border-radius: $radius-md;
+  @include tap-highlight;
+  
+  &.primary {
+    flex: 2;
+    background-color: $color-primary;
+    
+    .action-text {
+      color: #fff;
+    }
+  }
+  
+  &.active {
+    .action-icon {
+      transform: scale(1.1);
+    }
+  }
+}
+
+.action-icon {
+  font-size: 36rpx;
+  margin-bottom: 4rpx;
+  transition: $transition-fast;
+}
+
+.action-text {
+  font-size: $font-size-xs;
+  color: $color-text-secondary;
+}
+
+// 相似推荐
+.recommend-section {
+  margin: $spacing-md;
+  margin-bottom: 200rpx;
+}
+
+.section-title {
+  display: block;
+  font-size: $font-size-base;
+  font-weight: 600;
+  color: $color-text-primary;
+  margin-bottom: $spacing-md;
+}
+
+.recommend-scroll {
+  display: flex;
+  white-space: nowrap;
+}
+
+.recommend-item {
+  display: inline-flex;
+  flex-direction: column;
+  width: 200rpx;
+  margin-right: $spacing-md;
+  border-radius: $radius-lg;
+  overflow: hidden;
+  background-color: $color-bg-card;
+  @include tap-highlight;
+  
+  &:last-child {
+    margin-right: 0;
+  }
+}
+
+.recommend-cover {
+  width: 200rpx;
+  height: 280rpx;
+  background-color: $color-bg-tertiary;
+}
+
+.recommend-title {
+  padding: $spacing-xs $spacing-sm;
+  font-size: $font-size-xs;
+  color: $color-text-secondary;
+  @include ellipsis(1);
+}

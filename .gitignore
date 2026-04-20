@@ -1,0 +1,34 @@
+.DS_Store
+
+# Python
+__pycache__/
+*.pyc
+.venv/
+venv/
+
+# Node
+node_modules/
+dist/
+build/
+*.tsbuildinfo
+
+# Local env
+.env
+*.env.local
+.DS_Store
+
+# Python
+__pycache__/
+*.pyc
+.venv/
+venv/
+
+# Node
+node_modules/
+dist/
+build/
+*.tsbuildinfo
+
+# Local env
+.env
+*.env.local

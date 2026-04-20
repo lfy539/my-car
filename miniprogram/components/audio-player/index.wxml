@@ -1,0 +1,29 @@
+<view class="audio-player {{visible ? 'visible' : ''}}" wx:if="{{currentSound}}">
+  <view class="player-content">
+    <image class="player-cover" src="{{currentSound.coverUrl}}" mode="aspectFill" bindtap="onCoverTap" />
+    <view class="player-info" bindtap="onCoverTap">
+      <text class="player-title">{{currentSound.title}}</text>
+      <text class="player-progress">{{formatTime(currentTime)}} / {{formatTime(duration)}}</text>
+    </view>
+    <view class="player-controls">
+      <view class="control-btn" bindtap="onPlayToggle">
+        <text>{{isPlaying ? '⏸' : '▶️'}}</text>
+      </view>
+      <view class="control-btn" bindtap="onClose">
+        <text>✕</text>
+      </view>
+    </view>
+  </view>
+  <view class="progress-bar">
+    <view class="progress-fill" style="width: {{progress}}%"></view>
+  </view>
+</view>
+
+<wxs module="formatTime">
+module.exports = function(seconds) {
+  if (!seconds || seconds < 0) return '0:00';
+  var mins = Math.floor(seconds / 60);
+  var secs = Math.floor(seconds % 60);
+  return mins + ':' + (secs < 10 ? '0' : '') + secs;
+}
+</wxs>

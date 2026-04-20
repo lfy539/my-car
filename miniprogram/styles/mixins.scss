@@ -1,0 +1,101 @@
+// ============================================
+// 常用 Mixins
+// ============================================
+
+@import './variables.scss';
+
+// Flex 布局
+@mixin flex-center {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+@mixin flex-between {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+@mixin flex-column {
+  display: flex;
+  flex-direction: column;
+}
+
+// 文字省略
+@mixin ellipsis($lines: 1) {
+  @if $lines == 1 {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  } @else {
+    display: -webkit-box;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: $lines;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+}
+
+// 卡片样式
+@mixin card-style {
+  background-color: $color-bg-card;
+  border-radius: $radius-lg;
+  box-shadow: $shadow-sm;
+}
+
+// 点击态
+@mixin tap-highlight {
+  &:active {
+    opacity: 0.8;
+    transform: scale(0.98);
+  }
+}
+
+// 安全区域底部
+@mixin safe-area-bottom {
+  padding-bottom: calc(#{$spacing-md} + #{$safe-area-bottom});
+}
+
+// 页面容器
+@mixin page-container {
+  min-height: 100vh;
+  background-color: $color-bg-primary;
+  padding-bottom: 130rpx;
+}
+
+// 骨架屏动画
+@mixin skeleton-animation {
+  background: linear-gradient(
+    90deg,
+    $color-bg-tertiary 25%,
+    $color-bg-hover 50%,
+    $color-bg-tertiary 75%
+  );
+  background-size: 200% 100%;
+  animation: skeleton-loading 1.5s infinite;
+}
+
+@keyframes skeleton-loading {
+  0% {
+    background-position: 200% 0;
+  }
+  100% {
+    background-position: -200% 0;
+  }
+}
+
+// 渐变背景
+@mixin gradient-primary {
+  background: linear-gradient(135deg, $color-primary 0%, $color-primary-dark 100%);
+}
+
+// 图标按钮
+@mixin icon-button($size: 80rpx) {
+  @include flex-center;
+  width: $size;
+  height: $size;
+  border-radius: $radius-md;
+  background-color: $color-bg-tertiary;
+  @include tap-highlight;
+}

@@ -1,0 +1,14 @@
+<view class="error-container">
+  <image
+    wx:if="{{image}}"
+    class="error-image" 
+    src="{{image}}"
+    mode="aspectFit"
+  />
+  <text wx:else class="error-icon">!</text>
+  <text class="error-title">{{title || '加载失败'}}</text>
+  <text class="error-desc" wx:if="{{description}}">{{description}}</text>
+  <view class="error-action" bindtap="onRetry">
+    <text class="action-text">{{retryText || '点击重试'}}</text>
+  </view>
+</view>

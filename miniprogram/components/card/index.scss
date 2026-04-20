@@ -1,0 +1,40 @@
+@import '../../styles/variables.scss';
+@import '../../styles/mixins.scss';
+
+.card {
+  @include card-style;
+  padding: $spacing-sm $spacing-md;
+  margin-bottom: $spacing-sm;
+}
+
+.card-header {
+  @include flex-between;
+  margin-bottom: $spacing-sm;
+}
+
+.card-title {
+  font-size: $font-size-base;
+  font-weight: 600;
+  color: $color-primary-light;
+}
+
+.card-extra {
+  display: flex;
+  align-items: center;
+  @include tap-highlight;
+  
+  .extra-text {
+    font-size: $font-size-xs;
+    color: $color-text-tertiary;
+  }
+  
+  .extra-arrow {
+    font-size: $font-size-base;
+    color: $color-text-tertiary;
+    margin-left: 4rpx;
+  }
+}
+
+.card-body {
+  // 由插槽内容决定
+}

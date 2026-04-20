@@ -1,0 +1,150 @@
+<view class="page-container">
+  <!-- 搜索栏 -->
+  <view class="search-header">
+    <view class="search-box">
+      <text class="search-icon">🔍</text>
+      <input 
+        class="search-input"
+        type="text"
+        placeholder="搜索壁纸、音效..."
+        value="{{keyword}}"
+        focus="{{autoFocus}}"
+        confirm-type="search"
+        bindinput="onInput"
+        bindconfirm="onSearch"
+      />
+      <text class="clear-icon" wx:if="{{keyword}}" bindtap="onClear">×</text>
+    </view>
+    <text class="cancel-btn" bindtap="onCancel">取消</text>
+  </view>
+  
+  <!-- 搜索建议（输入时显示） -->
+  <view class="suggestions" wx:if="{{showSuggestions && suggestions.length > 0}}">
+    <view 
+      class="suggestion-item"
+      wx:for="{{suggestions}}"
+      wx:key="*this"
+      bindtap="onSuggestionTap"
+      data-keyword="{{item}}"
+    >
+      <text class="suggestion-icon">🔍</text>
+      <text class="suggestion-text">{{item}}</text>
+    </view>
+  </view>
+  
+  <!-- 初始状态：历史搜索 + 热门搜索 -->
+  <view class="search-home" wx:if="{{!hasSearched && !showSuggestions}}">
+    <!-- 搜索历史 -->
+    <view class="section" wx:if="{{history.length > 0}}">
+      <view class="section-header">
+        <text class="section-title">搜索历史</text>
+        <text class="section-action" bindtap="onClearHistory">清空</text>
+      </view>
+      <view class="tag-list">
+        <view 
+          class="tag-item"
+          wx:for="{{history}}"
+          wx:key="*this"
+          bindtap="onHistoryTap"
+          data-keyword="{{item}}"
+        >{{item}}</view>
+      </view>
+    </view>
+    
+    <!-- 热门搜索 -->
+    <view class="section">
+      <view class="section-header">
+        <text class="section-title">热门搜索</text>
+      </view>
+      <view class="hot-list">
+        <view 
+          class="hot-item"
+          wx:for="{{hotKeywords}}"
+          wx:key="keyword"
+          bindtap="onHotTap"
+          data-keyword="{{item.keyword}}"
+        >
+          <text class="hot-rank {{index < 3 ? 'top' : ''}}">{{index + 1}}</text>
+          <text class="hot-text">{{item.keyword}}</text>
+          <text class="hot-badge" wx:if="{{item.isHot}}">热</text>
+        </view>
+      </view>
+    </view>
+  </view>
+  
+  <!-- 搜索结果 -->
+  <view class="search-results" wx:if="{{hasSearched && !showSuggestions}}">
+    <!-- 结果类型切换 -->
+    <view class="result-tabs">
+      <view 
+        class="tab-item {{resultType === 'all' ? 'active' : ''}}"
+        bindtap="onTabChange"
+        data-type="all"
+      >全部 ({{totalCount}})</view>
+      <view 
+        class="tab-item {{resultType === 'wallpaper' ? 'active' : ''}}"
+        bindtap="onTabChange"
+        data-type="wallpaper"
+      >壁纸 ({{wallpaperResults.length}})</view>
+      <view 
+        class="tab-item {{resultType === 'sound' ? 'active' : ''}}"
+        bindtap="onTabChange"
+        data-type="sound"
+      >音效 ({{soundResults.length}})</view>
+    </view>
+    
+    <!-- 加载中 -->
+    <skeleton wx:if="{{loading}}" type="list" count="4" />
+    
+    <!-- 无结果 -->
+    <empty 
+      wx:elif="{{totalCount === 0}}" 
+      title="未找到相关内容" 
+      description="换个关键词试试吧"
+    />
+    
+    <!-- 结果列表 -->
+    <view wx:else class="result-list">
+      <!-- 壁纸结果 -->
+      <block wx:if="{{resultType === 'all' || resultType === 'wallpaper'}}">
+        <view class="result-section" wx:if="{{wallpaperResults.length > 0}}">
+          <text class="result-section-title" wx:if="{{resultType === 'all'}}">壁纸</text>
+          <view class="wallpaper-grid">
+            <view 
+              class="wallpaper-item"
+              wx:for="{{wallpaperResults}}"
+              wx:key="_id"
+              bindtap="onWallpaperTap"
+              data-id="{{item._id}}"
+            >
+              <image class="wallpaper-cover" src="{{item.coverUrl}}" mode="aspectFill" lazy-load />
+              <text class="wallpaper-title">{{item.title}}</text>
+            </view>
+          </view>
+        </view>
+      </block>
+      
+      <!-- 音效结果 -->
+      <block wx:if="{{resultType === 'all' || resultType === 'sound'}}">
+        <view class="result-section" wx:if="{{soundResults.length > 0}}">
+          <text class="result-section-title" wx:if="{{resultType === 'all'}}">音效</text>
+          <view class="sound-list">
+            <view 
+              class="sound-item"
+              wx:for="{{soundResults}}"
+              wx:key="_id"
+              bindtap="onSoundTap"
+              data-id="{{item._id}}"
+            >
+              <image class="sound-cover" src="{{item.coverUrl}}" mode="aspectFill" />
+              <view class="sound-info">
+                <text class="sound-title">{{item.title}}</text>
+                <text class="sound-meta">{{item.soundType}} · {{item.duration}}s</text>
+              </view>
+            </view>
+          </view>
+        </view>
+      </block>
+    </view>
+  </view>
+</view>

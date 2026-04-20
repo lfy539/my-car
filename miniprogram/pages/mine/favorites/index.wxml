@@ -1,0 +1,64 @@
+<view class="page-container">
+  <!-- 标签切换 -->
+  <view class="tab-header">
+    <view 
+      class="tab-item {{currentTab === 'wallpaper' ? 'active' : ''}}" 
+      bindtap="onTabChange" 
+      data-tab="wallpaper"
+    >
+      <text>壁纸</text>
+      <text class="tab-count">({{wallpaperList.length}})</text>
+    </view>
+    <view 
+      class="tab-item {{currentTab === 'sound' ? 'active' : ''}}" 
+      bindtap="onTabChange" 
+      data-tab="sound"
+    >
+      <text>音效</text>
+      <text class="tab-count">({{soundList.length}})</text>
+    </view>
+  </view>
+  
+  <!-- 壁纸收藏列表 -->
+  <view class="content-area" wx:if="{{currentTab === 'wallpaper'}}">
+    <empty wx:if="{{wallpaperList.length === 0}}" title="暂无收藏的壁纸" />
+    <view wx:else class="wallpaper-grid">
+      <view 
+        class="wallpaper-item"
+        wx:for="{{wallpaperList}}"
+        wx:key="_id"
+        bindtap="onWallpaperTap"
+        data-id="{{item._id}}"
+      >
+        <image class="wallpaper-cover" src="{{item.coverUrl}}" mode="aspectFill" />
+        <view class="wallpaper-title">{{item.title}}</view>
+        <view class="remove-btn" catchtap="onRemoveWallpaper" data-id="{{item._id}}">
+          <text>×</text>
+        </view>
+      </view>
+    </view>
+  </view>
+  
+  <!-- 音效收藏列表 -->
+  <view class="content-area" wx:if="{{currentTab === 'sound'}}">
+    <empty wx:if="{{soundList.length === 0}}" title="暂无收藏的音效" />
+    <view wx:else class="sound-list">
+      <view 
+        class="sound-item"
+        wx:for="{{soundList}}"
+        wx:key="_id"
+        bindtap="onSoundTap"
+        data-id="{{item._id}}"
+      >
+        <image class="sound-cover" src="{{item.coverUrl}}" mode="aspectFill" />
+        <view class="sound-info">
+          <text class="sound-title">{{item.title}}</text>
+          <text class="sound-meta">{{item.soundType}} · {{item.duration}}s</text>
+        </view>
+        <view class="remove-btn" catchtap="onRemoveSound" data-id="{{item._id}}">
+          <text>×</text>
+        </view>
+      </view>
+    </view>
+  </view>
+</view>

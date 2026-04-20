@@ -1,0 +1,14 @@
+<view class="empty-container">
+  <image
+    wx:if="{{image}}"
+    class="empty-image" 
+    src="{{image}}"
+    mode="aspectFit"
+  />
+  <text wx:else class="empty-icon">○</text>
+  <text class="empty-title">{{title || '暂无数据'}}</text>
+  <text class="empty-desc" wx:if="{{description}}">{{description}}</text>
+  <view class="empty-action" wx:if="{{actionText}}" bindtap="onActionTap">
+    <text class="action-text">{{actionText}}</text>
+  </view>
+</view>

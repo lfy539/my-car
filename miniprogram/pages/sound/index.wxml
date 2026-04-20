@@ -1,0 +1,59 @@
+<view class="page-container">
+  <view class="content-wrapper">
+    <!-- 筛选栏 -->
+    <scroll-view class="filter-bar" scroll-x enable-flex>
+      <view 
+        class="filter-item {{!currentBrandId ? 'active' : ''}}"
+        bindtap="onFilterTap"
+        data-id=""
+      >全部</view>
+      <view 
+        class="filter-item {{currentBrandId === item._id ? 'active' : ''}}"
+        wx:for="{{brands}}"
+        wx:key="_id"
+        bindtap="onFilterTap"
+        data-id="{{item._id}}"
+      >{{item.name}}</view>
+    </scroll-view>
+    
+    <!-- 加载状态 - 骨架屏 -->
+    <skeleton wx:if="{{loading && list.length === 0}}" type="list" count="5" />
+    
+    <!-- 错误状态 -->
+    <error wx:elif="{{error && list.length === 0}}" bind:retry="loadData" />
+    
+    <!-- 空状态 -->
+    <empty wx:elif="{{!loading && list.length === 0}}" title="暂无音效" />
+    
+    <!-- 音效列表 -->
+    <view wx:else class="sound-list">
+      <view 
+        class="sound-item"
+        wx:for="{{list}}"
+        wx:key="_id"
+      >
+        <view class="sound-cover" bindtap="onPlayTap" data-item="{{item}}">
+          <image class="cover-image" src="{{item.coverUrl}}" mode="aspectFill" />
+          <view class="play-icon {{playingId === item._id && isPlaying ? 'playing' : ''}}">
+            <text>{{playingId === item._id && isPlaying ? '⏸' : '▶'}}</text>
+          </view>
+        </view>
+        <view class="sound-info" bindtap="onItemTap" data-id="{{item._id}}">
+          <text class="sound-title">{{item.title}}</text>
+          <text class="sound-meta">{{item.soundType}} · {{item.duration}}s</text>
+        </view>
+        <view class="sound-action" bindtap="onFavoriteTap" data-item="{{item}}">
+          <text class="action-icon">❤</text>
+        </view>
+      </view>
+    </view>
+    
+    <!-- 加载更多 -->
+    <view class="load-more" wx:if="{{list.length > 0}}">
+      <text wx:if="{{loading}}">加载中...</text>
+      <text wx:elif="{{!hasMore}}">没有更多了</text>
+    </view>
+  </view>
+  
+  <tab-bar currentTab="pages/sound/index" />
+</view>

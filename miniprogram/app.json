@@ -1,0 +1,52 @@
+{
+  "pages": [
+    "pages/index/index",
+    "pages/search/index",
+    "pages/wallpaper/index",
+    "pages/wallpaper/detail/index",
+    "pages/sound/index",
+    "pages/sound/detail/index",
+    "pages/mine/index",
+    "pages/mine/favorites/index",
+    "pages/mine/downloads/index"
+  ],
+  "window": {
+    "backgroundColor": "#0D1117",
+    "backgroundTextStyle": "light",
+    "navigationBarBackgroundColor": "#0D1117",
+    "navigationBarTitleText": "车机美化库",
+    "navigationBarTextStyle": "white"
+  },
+  "tabBar": {
+    "custom": true,
+    "color": "#8B949E",
+    "selectedColor": "#2F81F7",
+    "backgroundColor": "#161B22",
+    "borderStyle": "black",
+    "list": [
+      {
+        "pagePath": "pages/index/index",
+        "text": "首页"
+      },
+      {
+        "pagePath": "pages/wallpaper/index",
+        "text": "壁纸"
+      },
+      {
+        "pagePath": "pages/sound/index",
+        "text": "音效"
+      },
+      {
+        "pagePath": "pages/mine/index",
+        "text": "我的"
+      }
+    ]
+  },
+  "usingComponents": {
+    "tab-bar": "/components/tab-bar/index"
+  },
+  "subPackages": [],
+  "sitemapLocation": "sitemap.json",
+  "cloud": true,
+  "lazyCodeLoading": "requiredComponents"
+}

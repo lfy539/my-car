@@ -1,0 +1,67 @@
+<view class="page-container">
+  <loading wx:if="{{loading}}" fullscreen text="加载中..." />
+  
+  <view wx:else class="detail-content">
+    <!-- 壁纸预览 -->
+    <view class="preview-area" bindtap="onPreview">
+      <image 
+        class="preview-image" 
+        src="{{wallpaper.coverUrl}}" 
+        mode="aspectFill"
+        show-menu-by-longpress
+      />
+      <view class="preview-tip">
+        <text>点击预览大图</text>
+      </view>
+    </view>
+    
+    <!-- 壁纸信息 -->
+    <view class="info-card">
+      <text class="wallpaper-title">{{wallpaper.title}}</text>
+      <view class="info-row">
+        <text class="info-label">分辨率</text>
+        <text class="info-value">{{wallpaper.resolution}}</text>
+      </view>
+      <view class="info-row">
+        <text class="info-label">品牌</text>
+        <text class="info-value">{{brandName}}</text>
+      </view>
+      <view class="tags-row" wx:if="{{wallpaper.tags.length > 0}}">
+        <text class="tag" wx:for="{{wallpaper.tags}}" wx:key="*this">{{item}}</text>
+      </view>
+    </view>
+    
+    <!-- 相似推荐 -->
+    <view class="recommend-section" wx:if="{{similarList.length > 0}}">
+      <text class="section-title">相似推荐</text>
+      <scroll-view class="recommend-scroll" scroll-x enable-flex>
+        <view 
+          class="recommend-item"
+          wx:for="{{similarList}}"
+          wx:key="_id"
+          bindtap="onSimilarTap"
+          data-id="{{item._id}}"
+        >
+          <image class="recommend-cover" src="{{item.coverUrl}}" mode="aspectFill" lazy-load />
+          <text class="recommend-title">{{item.title}}</text>
+        </view>
+      </scroll-view>
+    </view>
+    
+    <!-- 操作按钮 -->
+    <view class="action-bar">
+      <view class="action-btn {{isFavorite ? 'active' : ''}}" bindtap="onToggleFavorite">
+        <text class="action-icon">{{isFavorite ? '❤️' : '🤍'}}</text>
+        <text class="action-text">{{isFavorite ? '已收藏' : '收藏'}}</text>
+      </view>
+      <view class="action-btn primary" bindtap="onDownload">
+        <text class="action-icon">📥</text>
+        <text class="action-text">保存到相册</text>
+      </view>
+      <view class="action-btn" bindtap="onShare">
+        <text class="action-icon">📤</text>
+        <text class="action-text">分享</text>
+      </view>
+    </view>
+  </view>
+</view>

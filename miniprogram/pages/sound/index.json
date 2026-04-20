@@ -1,0 +1,10 @@
+{
+  "usingComponents": {
+    "tab-bar": "/components/tab-bar/index",
+    "loading": "/components/loading/index",
+    "skeleton": "/components/skeleton/index",
+    "error": "/components/error/index",
+    "empty": "/components/empty/index"
+  },
+  "navigationBarTitleText": "音效"
+}
