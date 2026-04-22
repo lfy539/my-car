@@ -2,6 +2,7 @@ from fastapi import APIRouter, Depends, HTTPException, Query, UploadFile, File
 
 from app.api.deps import get_current_admin
 from app.api.v1._helpers import doc_to_dict, page_payload, save_upload_file, touch_update
+from app.core.media import detect_image_resolution
 from app.core.utils import now_ts
 from app.models.admin import Admin
 from app.models.wallpaper import Wallpaper
@@ -42,6 +43,9 @@ async def create_wallpaper(payload: WallpaperIn, _: Admin = Depends(get_current_
     data = payload.model_dump()
     if not data.get("coverUrl"):
         data["coverUrl"] = data.get("originUrl", "")
+    auto_resolution = detect_image_resolution(data.get("originUrl", ""))
+    if auto_resolution:
+        data["resolution"] = auto_resolution
     if not data.get("publishAt"):
         data["publishAt"] = now_ts()
     wallpaper = Wallpaper(**data, createdAt=now_ts(), updatedAt=now_ts())
@@ -61,6 +65,9 @@ async def update_wallpaper(
     update_data = payload.model_dump()
     if not update_data.get("coverUrl"):
         update_data["coverUrl"] = update_data.get("originUrl", wallpaper.originUrl)
+    auto_resolution = detect_image_resolution(update_data.get("originUrl", wallpaper.originUrl))
+    if auto_resolution:
+        update_data["resolution"] = auto_resolution
     if not update_data.get("publishAt"):
         update_data["publishAt"] = wallpaper.publishAt
     touch_update(update_data)
@@ -85,4 +92,6 @@ async def upload_cover(file: UploadFile = File(...), _: Admin = Depends(get_curr
 
 @router.post("/upload-origin")
 async def upload_origin(file: UploadFile = File(...), _: Admin = Depends(get_current_admin)):
-    return {"url": await save_upload_file(file, "wallpapers/origins")}
+    url = await save_upload_file(file, "wallpapers/origins")
+    resolution = detect_image_resolution(url)
+    return {"url": url, "resolution": resolution}

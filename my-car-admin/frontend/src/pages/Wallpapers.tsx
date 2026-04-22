@@ -17,7 +17,7 @@ const defaultForm: Omit<Wallpaper, "_id"> = {
   brandId: "",
   modelId: "",
   tags: [],
-  resolution: "1080x1920",
+  resolution: "",
   status: 1
 };
 
@@ -163,9 +163,12 @@ export default function WallpapersPage() {
             <Upload
               showUploadList={false}
               beforeUpload={async (file) => {
-                const url = await uploadWallpaperOrigin(file as File);
-                form.setFieldValue("originUrl", url);
-                form.setFieldValue("coverUrl", url);
+                const uploaded = await uploadWallpaperOrigin(file as File);
+                form.setFieldValue("originUrl", uploaded.url);
+                form.setFieldValue("coverUrl", uploaded.url);
+                if (uploaded.resolution) {
+                  form.setFieldValue("resolution", uploaded.resolution);
+                }
                 message.success("上传成功");
                 return false;
               }}
@@ -187,8 +190,8 @@ export default function WallpapersPage() {
           <Form.Item name="tagsText" label="标签（逗号分隔）">
             <Input />
           </Form.Item>
-          <Form.Item name="resolution" label="分辨率">
-            <Input />
+          <Form.Item name="resolution" label="分辨率（自动识别）">
+            <Input disabled placeholder="上传原图后自动填充" />
           </Form.Item>
           <Form.Item name="status" label="状态">
             <InputNumber min={0} max={2} style={{ width: "100%" }} />

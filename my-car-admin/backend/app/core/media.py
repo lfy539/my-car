@@ -2,6 +2,7 @@ from pathlib import Path
 from urllib.parse import urlparse
 
 from mutagen import File as MutagenFile
+from PIL import Image
 
 from app.core.config import settings
 
@@ -36,6 +37,21 @@ def detect_audio_duration(audio_url: str) -> float | None:
         length = getattr(getattr(media, "info", None), "length", None)
         if length and length > 0:
             return round(float(length), 2)
+    except Exception:
+        return None
+    return None
+
+
+def detect_image_resolution(image_url: str) -> str | None:
+    local_path = _resolve_local_media_path(image_url)
+    if not local_path:
+        return None
+
+    try:
+        with Image.open(local_path) as img:
+            width, height = img.size
+            if width > 0 and height > 0:
+                return f"{width}x{height}"
     except Exception:
         return None
     return None

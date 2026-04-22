@@ -9,7 +9,7 @@ const defaultForm = {
     brandId: "",
     modelId: "",
     tags: [],
-    resolution: "1080x1920",
+    resolution: "",
     status: 1
 };
 export default function WallpapersPage() {
@@ -96,10 +96,13 @@ export default function WallpapersPage() {
                                     }, children: _jsx(Button, { size: "small", danger: true, children: "\u5220\u9664" }) })] }))
                     }
                 ] }), _jsx(Modal, { title: editing ? "编辑壁纸" : "新增壁纸", open: open, onOk: onSubmit, onCancel: () => setOpen(false), width: 680, children: _jsxs(Form, { form: form, layout: "vertical", children: [_jsx(Form.Item, { name: "title", label: "\u6807\u9898", rules: [{ required: true }], children: _jsx(Input, {}) }), _jsx(Form.Item, { name: "originUrl", label: "\u539F\u56FEURL", rules: [{ required: true }], children: _jsx(Input, {}) }), _jsx(Form.Item, { label: "\u4E0A\u4F20\u539F\u56FE", children: _jsx(Upload, { showUploadList: false, beforeUpload: async (file) => {
-                                    const url = await uploadWallpaperOrigin(file);
-                                    form.setFieldValue("originUrl", url);
-                                    form.setFieldValue("coverUrl", url);
+                                    const uploaded = await uploadWallpaperOrigin(file);
+                                    form.setFieldValue("originUrl", uploaded.url);
+                                    form.setFieldValue("coverUrl", uploaded.url);
+                                    if (uploaded.resolution) {
+                                        form.setFieldValue("resolution", uploaded.resolution);
+                                    }
                                     message.success("上传成功");
                                     return false;
-                                }, children: _jsx(Button, { children: "\u4E0A\u4F20\u539F\u56FE" }) }) }), _jsx(Form.Item, { name: "brandId", label: "\u54C1\u724C", rules: [{ required: true, message: "请选择品牌" }], children: _jsx(Select, { placeholder: "\u8BF7\u9009\u62E9\u54C1\u724C", options: brands.map((brand) => ({ label: brand.name, value: brand._id })), showSearch: true, optionFilterProp: "label" }) }), _jsx(Form.Item, { name: "modelId", label: "\u8F66\u578BID", children: _jsx(Input, {}) }), _jsx(Form.Item, { name: "tagsText", label: "\u6807\u7B7E\uFF08\u9017\u53F7\u5206\u9694\uFF09", children: _jsx(Input, {}) }), _jsx(Form.Item, { name: "resolution", label: "\u5206\u8FA8\u7387", children: _jsx(Input, {}) }), _jsx(Form.Item, { name: "status", label: "\u72B6\u6001", children: _jsx(InputNumber, { min: 0, max: 2, style: { width: "100%" } }) })] }) }), _jsx(Modal, { title: previewTitle || "壁纸预览", open: previewOpen, footer: null, onCancel: () => setPreviewOpen(false), width: 760, children: _jsx("div", { style: { textAlign: "center" }, children: _jsx("img", { src: previewSrc, alt: previewTitle || "壁纸预览", style: { maxWidth: "100%", maxHeight: "70vh", objectFit: "contain" } }) }) })] }));
+                                }, children: _jsx(Button, { children: "\u4E0A\u4F20\u539F\u56FE" }) }) }), _jsx(Form.Item, { name: "brandId", label: "\u54C1\u724C", rules: [{ required: true, message: "请选择品牌" }], children: _jsx(Select, { placeholder: "\u8BF7\u9009\u62E9\u54C1\u724C", options: brands.map((brand) => ({ label: brand.name, value: brand._id })), showSearch: true, optionFilterProp: "label" }) }), _jsx(Form.Item, { name: "modelId", label: "\u8F66\u578BID", children: _jsx(Input, {}) }), _jsx(Form.Item, { name: "tagsText", label: "\u6807\u7B7E\uFF08\u9017\u53F7\u5206\u9694\uFF09", children: _jsx(Input, {}) }), _jsx(Form.Item, { name: "resolution", label: "\u5206\u8FA8\u7387\uFF08\u81EA\u52A8\u8BC6\u522B\uFF09", children: _jsx(Input, { disabled: true, placeholder: "\u4E0A\u4F20\u539F\u56FE\u540E\u81EA\u52A8\u586B\u5145" }) }), _jsx(Form.Item, { name: "status", label: "\u72B6\u6001", children: _jsx(InputNumber, { min: 0, max: 2, style: { width: "100%" } }) })] }) }), _jsx(Modal, { title: previewTitle || "壁纸预览", open: previewOpen, footer: null, onCancel: () => setPreviewOpen(false), width: 760, children: _jsx("div", { style: { textAlign: "center" }, children: _jsx("img", { src: previewSrc, alt: previewTitle || "壁纸预览", style: { maxWidth: "100%", maxHeight: "70vh", objectFit: "contain" } }) }) })] }));
 }

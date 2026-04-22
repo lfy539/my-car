@@ -119,6 +119,13 @@ async function uploadFile(url: string, file: File): Promise<string> {
 export const uploadBrandLogo = (file: File) => uploadFile("/brands/upload-logo", file);
 export const uploadBannerImage = (file: File) => uploadFile("/banners/upload-image", file);
 export const uploadWallpaperCover = (file: File) => uploadFile("/wallpapers/upload-cover", file);
-export const uploadWallpaperOrigin = (file: File) => uploadFile("/wallpapers/upload-origin", file);
+export async function uploadWallpaperOrigin(file: File): Promise<{ url: string; resolution?: string }> {
+  const form = new FormData();
+  form.append("file", file);
+  const { data } = await client.post("/wallpapers/upload-origin", form, {
+    headers: { "Content-Type": "multipart/form-data" }
+  });
+  return data;
+}
 export const uploadSoundCover = (file: File) => uploadFile("/sounds/upload-cover", file);
 export const uploadSoundAudio = (file: File) => uploadFile("/sounds/upload-audio", file);
