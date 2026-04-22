@@ -425,3 +425,135 @@ wx.cloud.init({
 - 缺少必要页面（隐私协议等）
 - 功能描述不清晰
 - 类目选择不正确
+
+---
+
+## 十一、阿里云生产部署（my-car-admin）
+
+本节用于独立后台 `my-car-admin` 生产部署，域名固定为：
+
+- 管理前端：`https://admin.breakcode.top`
+- 后端 API：`https://api.breakcode.top`
+
+### 11.1 ECS 目录与运行时
+
+建议在 ECS 上使用以下目录：
+
+```bash
+/srv/my-car-admin/
+  ├── backend/
+  ├── frontend/
+  ├── nginx/
+  ├── logs/
+  └── scripts/
+```
+
+安装运行时：
+
+- Docker
+- Docker Compose
+- Nginx（宿主机）
+
+### 11.2 Docker Compose（示例）
+
+在 `/srv/my-car-admin/backend/docker-compose.prod.yml`：
+
+```yaml
+version: "3.9"
+services:
+  backend:
+    image: your-registry/my-car-admin-backend:latest
+    container_name: mycar_backend
+    restart: always
+    env_file:
+      - .env
+    ports:
+      - "127.0.0.1:8000:8000"
+    volumes:
+      - /srv/my-car-admin/backend/uploads:/data/uploads
+    command: uvicorn app.main:app --host 0.0.0.0 --port 8000
+```
+
+### 11.3 Nginx（admin/api 双域名）
+
+`admin.breakcode.top`（前端静态）：
+
+- `root` 指向前端构建产物目录
+- 开启 SPA fallback：`try_files $uri /index.html`
+
+`api.breakcode.top`（反代后端）：
+
+- `/api/v1/` -> `http://127.0.0.1:8000/api/v1/`
+- `/media/` -> `/srv/my-car-admin/backend/uploads/`
+
+Nginx 关键项：
+
+- HTTP 跳转 HTTPS
+- TLS 1.2+
+- gzip on
+- `client_max_body_size`（建议 `20m`）
+- `proxy_read_timeout`（建议 `60s`）
+
+### 11.4 后端生产环境变量
+
+参考 `my-car-admin/backend/.env.example`，生产环境至少配置：
+
+```bash
+ENV=prod
+MONGO_URI=mongodb://xxx:xxx@mongo:27017
+MONGO_DB_NAME=my_car_admin
+JWT_SECRET_KEY=<strong-secret>
+MEDIA_BASE_URL=https://api.breakcode.top/media
+UPLOAD_DIR=/data/uploads
+CORS_ORIGINS=["https://admin.breakcode.top"]
+```
+
+### 11.5 云函数环境变量切换（关键）
+
+需要更新以下云函数：
+
+- `api-home`
+- `api-wallpapers`
+- `api-sounds`
+- `api-search`
+
+统一环境变量：
+
+```text
+ADMIN_API_BASE_URL=https://api.breakcode.top/api/v1
+ADMIN_PUBLIC_TOKEN=<public-token-or-empty>
+```
+
+发布步骤：
+
+1. 微信开发者工具 -> 云开发 -> 云函数
+2. 分别进入上述四个函数，更新环境变量
+3. 执行“上传并部署：云端安装依赖”
+4. 控制台测试：
+   - `api-home`：`{}`
+   - `api-wallpapers`：`{"action":"list","page":1,"pageSize":10}`
+   - `api-sounds`：`{"action":"list","page":1,"pageSize":10}`
+   - `api-search`：`{"action":"hot"}`
+
+### 11.6 切换与回滚策略
+
+切换顺序：
+
+1. `api.breakcode.top` 健康检查通过（`/api/v1/health`）
+2. 管理后台 `admin.breakcode.top` 登录与 CRUD 通过
+3. 更新并部署 4 个云函数环境变量
+4. 小程序全链路回归
+
+回滚顺序：
+
+1. 云函数 `ADMIN_API_BASE_URL` 回切到旧地址
+2. 后端镜像回退到上一版本 tag
+3. 数据库按备份时间点恢复（仅在数据异常时）
+
+### 11.7 上线验收（阿里云）
+
+- `admin.breakcode.top` 可打开且登录成功
+- `api.breakcode.top/api/v1/health` 返回正常
+- 小程序首页/壁纸/音效/搜索走真实数据
+- 云函数日志中无持续性 5xx 错误
+- Nginx 与后端日志可检索、可定位请求链路

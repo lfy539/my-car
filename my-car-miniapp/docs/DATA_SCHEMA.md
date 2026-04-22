@@ -283,3 +283,52 @@ interface PageResponse<T> {
 3. **热度分数**：由系统自动计算，CMS中不建议手动修改
 4. **删除内容**：建议改为下架状态而非物理删除，保证数据可追溯
 5. **批量操作**：修改品牌/车型时注意关联内容的更新
+
+---
+
+## 6. 三端契约补充（Phase 6）
+
+本节用于约束 `miniprogram`、`cloudfunctions`、`my-car-admin` 的跨端协议，避免联调阶段出现字段与错误语义不一致。
+
+### 6.1 接口版本策略
+
+- 对外接口统一使用 `/api/v1` 前缀。
+- 仅允许向后兼容的新增字段直接发布。
+- 破坏性变更（删字段、改字段语义）必须：
+  1. 后端先提供兼容窗口；
+  2. 云函数完成兼容映射；
+  3. 小程序升级后再移除旧字段。
+
+### 6.2 云函数错误码映射规范
+
+| 后端场景 | 后端表现 | 云函数返回 code | 云函数 message |
+|-----|------|------|------|
+| 参数缺失/非法 | 400/422 | 1001 | 参数错误 |
+| 资源不存在 | 404 | 3001 | 资源不存在 |
+| 鉴权失败 | 401/403 | 2001-2003 | 未登录/无权限 |
+| 上游超时或网络失败 | timeout/network error | 5001 | 网络或服务异常 |
+| 成功 | 200 | 0 | success |
+
+说明：小程序端只依赖云函数统一返回结构，不直接依赖 HTTP 状态码。
+
+### 6.3 关键公共接口契约（当前实现）
+
+- `GET /api/v1/public/home`
+  - 返回：`banners`、`brands`、`hotWallpapers`、`hotSounds`
+- `GET /api/v1/public/wallpapers`
+  - 参数：`page`、`pageSize`、`brandId`、`modelId`、`sortBy`
+  - 返回：`PageResponse<Wallpaper>`
+- `GET /api/v1/public/sounds`
+  - 参数：`page`、`pageSize`、`brandId`、`modelId`、`soundType`、`sortBy`
+  - 返回：`PageResponse<Sound>`
+- `GET /api/v1/public/search`
+  - 参数：`keyword`、`type`、`page`、`pageSize`
+  - 返回：`wallpapers`、`sounds`、`wallpaperTotal`、`soundTotal`、`total`
+- `GET /api/v1/public/search/hot`
+  - 返回：`keywords`
+
+### 6.4 数据一致性实施要求
+
+- 内容可见性统一由后端 `status=1` 规则控制，云函数与小程序不重复实现上架逻辑。
+- `hotScore` 等运营字段仅由后端更新，小程序端只读展示。
+- 媒体 URL 由后端输出标准化地址（本地 `/media` 或 OSS/CDN 完整 URL），小程序不做域名拼接。

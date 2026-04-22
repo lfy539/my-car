@@ -1,0 +1,17 @@
+# Copy this file to deploy.conf and modify values.
+
+DEPLOY_HOST=8.138.110.210
+DEPLOY_USER=root
+DEPLOY_PORT=22
+DEPLOY_BASE_DIR=/srv/my-car-admin
+
+# Domains used when --setup-nginx is enabled.
+ADMIN_DOMAIN=admin.breakcode.top
+API_DOMAIN=api.breakcode.top
+
+# Remote container/image naming.
+IMAGE_NAME=mycar-admin-backend:prod
+CONTAINER_NAME=mycar_backend
+
+# Local env file uploaded to server as ${DEPLOY_BASE_DIR}/backend/.env
+ENV_FILE=backend/.env

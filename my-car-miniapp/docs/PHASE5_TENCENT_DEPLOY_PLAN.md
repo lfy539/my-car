@@ -1,9 +1,10 @@
-# Phase 5 腾讯云部署和上线详细方案
+# Phase 5 阿里云部署和上线详细方案
 
 ## 目标与范围
 
-- 将 `my-car-admin`（FastAPI 后端 + React 管理台）部署到腾讯云生产环境。
-- 提供公网 HTTPS API 给小程序云函数调用。
+- 将 `my-car-admin`（FastAPI 后端 + React 管理台）部署到阿里云 ECS 生产环境。
+- 使用 `breakcode.top` 子域名：`admin.breakcode.top`（管理台）、`api.breakcode.top`（API）。
+- 保持调用链路：`miniprogram -> cloudfunctions -> my-car-admin(API)`。
 - 保证可观测、可回滚、可持续发布。
 
 涉及代码与配置路径：
@@ -20,103 +21,107 @@
 
 ```mermaid
 flowchart LR
-  subgraph tencentCloud [TencentCloudProduction]
-    CVM[CVM_DockerHost]
-    Nginx[Nginx_ReverseProxy]
-    Backend[FastAPI_Container]
-    Frontend[Admin_Static_Build]
-    Mongo[TencentDB_MongoDB]
-    COS[COS_Bucket]
-    CDN[Tencent_CDN]
-    CLS[CLS_LogService]
-    CM[CloudMonitor]
+  subgraph aliyunProd [AliyunProduction]
+    ecs[ECS_DockerHost]
+    nginx[Nginx_ReverseProxy]
+    backend[FastAPI_Container]
+    frontend[Admin_Static_Build]
+    mongo[MongoDB_ReplicaSet]
+    oss[Aliyun_OSS]
+    cdn[Aliyun_CDN]
+    sls[SLS_LogService]
+    cms[CloudMonitor]
   end
 
-  AdminBrowser[AdminBrowser] -->|HTTPS_admin.domain.com| Nginx
-  MiniCloudFunc[MiniProgram_CloudFunctions] -->|HTTPS_api.domain.com| Nginx
-  Nginx --> Frontend
-  Nginx --> Backend
-  Backend --> Mongo
-  Backend --> COS
-  COS --> CDN
-  Backend --> CLS
-  CM --> CVM
-  CM --> Mongo
+  adminBrowser[AdminBrowser] -->|"HTTPS admin.breakcode.top"| nginx
+  miniCloudFunc[MiniProgram_CloudFunctions] -->|"HTTPS api.breakcode.top"| nginx
+  nginx --> frontend
+  nginx --> backend
+  backend --> mongo
+  backend --> oss
+  oss --> cdn
+  backend --> sls
+  cms --> ecs
+  cms --> mongo
 ```
 
 ## Phase 5 分步实施
 
-### 1) 购买与开通腾讯云资源
+### 1) 购买与开通阿里云资源
 
-- 购买 1 台 CVM（建议最低 2C4G，系统 Ubuntu 22.04）。
-- 购买 TencentDB for MongoDB（建议副本集，生产至少 20GB）。
-- 开通 COS（用于媒体文件统一存储），开通 CDN（媒体分发）。
-- 申请 SSL 证书（腾讯云 SSL，可先 DV 免费证书）。
-- 购买域名并完成备案（国内服务器需要）。
+- 购买 1 台 ECS（当前可用规格：`ecs.e-c1m1.large`，2C2G）。
+- 数据库二选一：
+  - 生产推荐：阿里云 MongoDB 副本集；
+  - 预算方案：先自建 MongoDB（后续平滑迁移）。
+- 开通 OSS（媒体文件）与 CDN（媒体分发，可后置）。
+- 申请 SSL 证书（阿里云 SSL DV）。
+- 完成域名备案（大陆节点建议完成）。
 
 推荐资源命名：
-- CVM: `mycar-prod-cvm`
+- ECS: `mycar-prod-ecs`
 - Mongo: `mycar-prod-mongo`
-- COS Bucket: `mycar-prod-media`
-- 域名: `admin.xxx.com`（管理台），`api.xxx.com`（后端 API）
+- OSS Bucket: `mycar-prod-media`
+- 域名: `admin.breakcode.top`，`api.breakcode.top`
 
 ### 2) 网络与安全基线配置
 
 - 安全组放行端口：`22`（白名单 IP）、`80`、`443`。
-- MongoDB 仅允许 CVM 内网或固定出口访问。
-- CVM 系统初始化：
-  - 创建非 root 运维用户
-  - 配置 SSH key 登录
-  - 开启 UFW/iptables 最小暴露
-- NTP 时间同步与时区统一（建议 UTC 或 Asia/Shanghai）。
+- MongoDB 仅允许 ECS 出口访问。
+- ECS 初始化：
+  - 创建非 root 用户
+  - 配置 SSH key 登录并禁用密码登录
+  - 开启最小暴露防火墙
+- NTP 时间同步与时区统一（建议 `Asia/Shanghai`）。
 
-### 3) CVM 安装运行时
+### 3) ECS 安装运行时
 
 - 安装 Docker 与 Docker Compose。
-- 安装 Nginx（可容器化，也可宿主机部署，二选一，推荐容器化统一管理）。
+- 安装 Nginx（建议宿主机部署，便于证书管理）。
 - 创建部署目录结构：
-  - `/opt/mycar/backend`
-  - `/opt/mycar/frontend`
-  - `/opt/mycar/nginx`
-  - `/opt/mycar/deploy`
+  - `/srv/my-car-admin/backend`
+  - `/srv/my-car-admin/frontend`
+  - `/srv/my-car-admin/nginx`
+  - `/srv/my-car-admin/scripts`
+  - `/srv/my-car-admin/logs`
 
 ### 4) 应用打包与发布策略
 
 - 后端构建：基于 `backend/requirements.txt` 制作镜像。
-- 前端构建：`npm run build` 产物通过 Nginx 静态托管。
+- 前端构建：`npm run build` 产物由 Nginx 托管。
 - 镜像仓库方案二选一：
-  - 优先 Tencent TCR（统一腾讯云权限）
-  - 或 GitHub Actions + 自建仓库
+  - 阿里云 ACR
+  - GitHub Container Registry
 - 发布流程：
   - 打版本标签（例如 `v1.0.0`）
   - 构建镜像并推送
-  - CVM 拉取新镜像并滚动重启
+  - ECS 拉取新镜像并重启
 
 ### 5) 生产环境变量与密钥
 
 后端 `.env` 必填建议项：
 - `ENV=prod`
 - `JWT_SECRET_KEY=<强随机密钥>`
-- `MONGO_URI=<TencentDB连接串>`
+- `MONGO_URI=<阿里云Mongo连接串>`
 - `MONGO_DB_NAME=my_car_admin`
-- `MEDIA_BASE_URL=https://cdn.xxx.com`
+- `MEDIA_BASE_URL=https://cdn.breakcode.top`（未上 CDN 前可用 API 域名静态资源路径）
 - `UPLOAD_DIR=/data/uploads`
 
 云函数环境变量（四个函数一致）：
-- `ADMIN_API_BASE_URL=https://api.xxx.com/api/v1`
+- `ADMIN_API_BASE_URL=https://api.breakcode.top/api/v1`
 - `ADMIN_PUBLIC_TOKEN=<可选，若启用公共接口鉴权>`
 
 ### 6) Nginx 域名与 HTTPS 配置
 
-- `admin.xxx.com`:
+- `admin.breakcode.top`:
   - `/` -> 前端静态资源
   - SPA 路由回退 `index.html`
-- `api.xxx.com`:
+- `api.breakcode.top`:
   - `/api/v1/*` -> FastAPI 容器
-  - 开启 gzip、合理超时与请求体限制
+  - `/media/*` -> 上传文件目录（或反代 OSS）
 - 配置 SSL 证书并开启：
   - HTTP 强制跳转 HTTPS
   - TLS 1.2+，禁用弱加密套件
+  - 开启 gzip、请求体大小限制、超时策略
 
 ### 7) 数据与媒体迁移
 
@@ -124,8 +129,8 @@ flowchart LR
   - 导入 brands/banners/wallpapers/sounds 基础数据
   - 确认索引（与 `docs/DEPLOY.md` 对齐）
 - 媒体文件迁移：
-  - 统一上传至 COS
-  - 数据库中的 `coverUrl/originUrl/audioUrl/logo` 替换为 CDN 域名
+  - 短期：`/media` 本地目录托管；
+  - 中期：迁移至 OSS + CDN，数据库 URL 切换为 CDN 域名。
 
 ### 8) 小程序联调与灰度
 
@@ -141,9 +146,9 @@ flowchart LR
 
 ### 9) 监控、日志与告警
 
-- 接入 CLS：Nginx 访问日志、后端应用日志。
-- Cloud Monitor 告警：
-  - CVM CPU/内存/磁盘阈值
+- 接入阿里云日志服务（SLS）：Nginx 访问日志、后端应用日志。
+- 阿里云监控告警：
+  - ECS CPU/内存/磁盘阈值
   - API 5xx 比例、响应时延
   - Mongo 连接数与慢查询
 - 关键业务指标：
@@ -170,7 +175,7 @@ flowchart LR
 - 小程序回滚：
   - 微信公众平台“版本回退”到上一稳定版本。
 - 数据回滚：
-  - TencentDB 自动备份恢复到指定时间点。
+  - MongoDB 备份恢复到指定时间点。
 
 ## 交付物（Phase 5）
 
@@ -179,9 +184,9 @@ flowchart LR
   - `nginx/prod.conf`
   - `backend/.env.prod.example`
 - 测试文件：
-  - `tests/phase5/phase5_test_plan.md`
-  - `tests/phase5/deploy_verification_checklist.md`
-  - `tests/phase5/online_smoke_test.sh`
+  - `my-car-admin/tests/phase5/phase5_test_plan.md`
+  - `my-car-admin/tests/phase5/deploy_verification_checklist.md`
+  - `my-car-admin/tests/phase5/online_smoke_test.sh`
 - 运维文档：
   - 域名证书更新说明
   - 发布/回滚 SOP
