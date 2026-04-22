@@ -27,7 +27,7 @@ class BannerIn(BaseModel):
 
 class WallpaperIn(BaseModel):
     title: str = Field(min_length=2, max_length=50)
-    coverUrl: str
+    coverUrl: str = ""
     originUrl: str
     brandId: str
     modelId: str = ""

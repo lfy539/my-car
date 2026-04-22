@@ -6,7 +6,6 @@ import {
   deleteWallpaper,
   listBrands,
   listWallpapers,
-  uploadWallpaperCover,
   uploadWallpaperOrigin,
   updateWallpaper
 } from "../services/content";
@@ -61,7 +60,7 @@ export default function WallpapersPage() {
     const values = await form.validateFields();
     const payload: Omit<Wallpaper, "_id"> = {
       title: values.title,
-      coverUrl: values.coverUrl,
+      coverUrl: values.originUrl,
       originUrl: values.originUrl,
       brandId: values.brandId,
       modelId: values.modelId || "",
@@ -157,22 +156,6 @@ export default function WallpapersPage() {
           <Form.Item name="title" label="标题" rules={[{ required: true }]}>
             <Input />
           </Form.Item>
-          <Form.Item name="coverUrl" label="封面URL" rules={[{ required: true }]}>
-            <Input />
-          </Form.Item>
-          <Form.Item label="上传封面">
-            <Upload
-              showUploadList={false}
-              beforeUpload={async (file) => {
-                const url = await uploadWallpaperCover(file as File);
-                form.setFieldValue("coverUrl", url);
-                message.success("上传成功");
-                return false;
-              }}
-            >
-              <Button>上传封面图</Button>
-            </Upload>
-          </Form.Item>
           <Form.Item name="originUrl" label="原图URL" rules={[{ required: true }]}>
             <Input />
           </Form.Item>
@@ -182,6 +165,7 @@ export default function WallpapersPage() {
               beforeUpload={async (file) => {
                 const url = await uploadWallpaperOrigin(file as File);
                 form.setFieldValue("originUrl", url);
+                form.setFieldValue("coverUrl", url);
                 message.success("上传成功");
                 return false;
               }}

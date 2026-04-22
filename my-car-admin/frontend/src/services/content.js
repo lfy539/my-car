@@ -1,13 +1,11 @@
 import axios from "axios";
-const PROD_API_BASE =
-  typeof window !== "undefined" && window.location.protocol === "https:"
+const PROD_API_BASE = typeof window !== "undefined" && window.location.protocol === "https:"
     ? "https://api.breakcode.top/api/v1"
     : "http://api.breakcode.top/api/v1";
-const API_BASE =
-  import.meta.env.VITE_API_BASE ||
-  (typeof window !== "undefined" && window.location.hostname.endsWith("breakcode.top")
-    ? PROD_API_BASE
-    : "http://127.0.0.1:8000/api/v1");
+const API_BASE = import.meta.env.VITE_API_BASE ||
+    (typeof window !== "undefined" && window.location.hostname.endsWith("breakcode.top")
+        ? PROD_API_BASE
+        : "http://127.0.0.1:8000/api/v1");
 const client = axios.create({
     baseURL: API_BASE,
     timeout: 15000

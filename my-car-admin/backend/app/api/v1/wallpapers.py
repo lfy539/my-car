@@ -40,6 +40,8 @@ async def list_wallpapers(
 @router.post("")
 async def create_wallpaper(payload: WallpaperIn, _: Admin = Depends(get_current_admin)):
     data = payload.model_dump()
+    if not data.get("coverUrl"):
+        data["coverUrl"] = data.get("originUrl", "")
     if not data.get("publishAt"):
         data["publishAt"] = now_ts()
     wallpaper = Wallpaper(**data, createdAt=now_ts(), updatedAt=now_ts())
@@ -57,6 +59,8 @@ async def update_wallpaper(
     if not wallpaper:
         raise HTTPException(status_code=404, detail="壁纸不存在")
     update_data = payload.model_dump()
+    if not update_data.get("coverUrl"):
+        update_data["coverUrl"] = update_data.get("originUrl", wallpaper.originUrl)
     if not update_data.get("publishAt"):
         update_data["publishAt"] = wallpaper.publishAt
     touch_update(update_data)
