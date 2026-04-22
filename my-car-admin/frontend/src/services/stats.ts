@@ -1,7 +1,10 @@
 import axios from "axios";
 import type { StatsOverview, StatsTopContent, StatsTrend } from "../types";
 
-const PROD_API_BASE = "https://api.breakcode.top/api/v1";
+const PROD_API_BASE =
+  typeof window !== "undefined" && window.location.protocol === "https:"
+    ? "https://api.breakcode.top/api/v1"
+    : "http://api.breakcode.top/api/v1";
 const API_BASE =
   import.meta.env.VITE_API_BASE ||
   (typeof window !== "undefined" && window.location.hostname.endsWith("breakcode.top")
