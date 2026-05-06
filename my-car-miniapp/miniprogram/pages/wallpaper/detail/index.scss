@@ -126,6 +126,15 @@
   }
 }
 
+.share-btn {
+  border: none;
+  line-height: inherit;
+
+  &::after {
+    border: none;
+  }
+}
+
 .action-icon {
   font-size: 36rpx;
   margin-bottom: 4rpx;

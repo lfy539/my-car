@@ -42,7 +42,10 @@ App<App.GlobalData>({
       if (token) {
         await userStore.getUserInfo();
         this.globalData.isLoggedIn = true;
+        return;
       }
+      const loginSuccess = await userStore.login();
+      this.globalData.isLoggedIn = loginSuccess;
     } catch (e) {
       console.log('未登录或登录已过期');
     }

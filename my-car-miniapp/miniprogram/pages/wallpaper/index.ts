@@ -94,7 +94,11 @@ Page({
 
       if (res.code === ErrorCodes.SUCCESS) {
         const { list = [], total = 0 } = res.data || {};
-        const newList = this.data.page === 1 ? list : [...this.data.list, ...list];
+        const normalizedList = (list as Array<Wallpaper & { id?: string }>).map((item) => ({
+          ...item,
+          _id: item._id || item.id || '',
+        }));
+        const newList = this.data.page === 1 ? normalizedList : [...this.data.list, ...normalizedList];
         
         this.setData({
           list: newList,
@@ -134,5 +138,12 @@ Page({
   onItemTap(e: WechatMiniprogram.TouchEvent) {
     const { id } = e.currentTarget.dataset;
     wx.navigateTo({ url: `/pages/wallpaper/detail/index?id=${id}` });
+  },
+
+  onShareAppMessage() {
+    return {
+      title: '精选车机壁纸，快来看看',
+      path: '/pages/wallpaper/index',
+    };
   },
 });

@@ -22,7 +22,8 @@ const mockSounds: Sound[] = [
   { _id: 's6', title: '零跑充电提示', coverUrl: 'https://picsum.photos/200/200?random=15', audioUrl: '', brandId: '6', modelId: '', soundType: '提示音', duration: 3, bitrate: 320, status: 1, publishAt: Date.now(), hotScore: 70 },
 ];
 
-const audioContext = wx.createInnerAudioContext();
+let audioContext: WechatMiniprogram.InnerAudioContext | null = null;
+const API_HOST = 'https://api.breakcode.top';
 
 Page({
   data: {
@@ -52,7 +53,12 @@ Page({
   },
 
   onUnload() {
-    audioContext.destroy();
+    if (audioContext) {
+      audioContext.stop();
+      audioContext.destroy();
+      audioContext = null;
+    }
+    (this as any)._audioBound = false;
   },
 
   onPullDownRefresh() {
@@ -69,6 +75,13 @@ Page({
   },
 
   initAudio() {
+    if (!audioContext) {
+      audioContext = wx.createInnerAudioContext();
+      (this as any)._audioSrcSet = false;
+      (this as any)._currentAudioUrl = '';
+    }
+    if ((this as any)._audioBound) return;
+
     audioContext.onPlay(() => {
       this.setData({ isPlaying: true });
       appStore.setPlayingAudio(this.data.playingId, true);
@@ -86,9 +99,37 @@ Page({
 
     audioContext.onError((err) => {
       console.error('Audio error:', err);
+      console.error('[AudioDebug] last audioUrl:', (this as any)._currentAudioUrl || '');
       this.setData({ isPlaying: false, playingId: '' });
-      wx.showToast({ title: '播放失败', icon: 'none' });
+      if (String(err?.errMsg || '').includes('audioInstance')) {
+        try {
+          audioContext?.destroy();
+        } catch (e) {
+          console.warn('destroy audio context failed:', e);
+        }
+        audioContext = null;
+        (this as any)._audioBound = false;
+        (this as any)._audioSrcSet = false;
+        (this as any)._currentAudioUrl = '';
+      }
+      wx.showToast({ title: `播放失败(${err?.errCode || '未知'})`, icon: 'none' });
     });
+
+    (this as any)._audioBound = true;
+  },
+
+  normalizeMediaUrl(rawUrl?: string): string {
+    if (!rawUrl) return '';
+    if (rawUrl.startsWith('https://')) return rawUrl;
+    if (rawUrl.startsWith('http://')) return rawUrl.replace(/^http:\/\//, 'https://');
+    if (rawUrl.startsWith('//')) return `https:${rawUrl}`;
+    if (rawUrl.startsWith('/')) return `${API_HOST}${rawUrl}`;
+    return `${API_HOST}/${rawUrl}`;
+  },
+
+  getAudioUrl(item: Sound & { audio?: string; fileUrl?: string; url?: string }): string {
+    const raw = item.audioUrl || item.audio || item.fileUrl || item.url || '';
+    return this.normalizeMediaUrl(raw);
   },
 
   async loadData() {
@@ -121,7 +162,13 @@ Page({
 
       if (res.code === ErrorCodes.SUCCESS) {
         const { list = [], total = 0 } = res.data || {};
-        const newList = this.data.page === 1 ? list : [...this.data.list, ...list];
+        const normalizedList = (list as Array<Sound & { id?: string; audio?: string; fileUrl?: string; url?: string }>).map((item) => ({
+          ...item,
+          _id: item._id || item.id || '',
+          coverUrl: this.normalizeMediaUrl(item.coverUrl),
+          audioUrl: this.getAudioUrl(item),
+        }));
+        const newList = this.data.page === 1 ? normalizedList : [...this.data.list, ...normalizedList];
         
         this.setData({
           list: newList,
@@ -159,22 +206,69 @@ Page({
   },
 
   onPlayTap(e: WechatMiniprogram.TouchEvent) {
-    const { item } = e.currentTarget.dataset as { item: Sound };
-    
-    if (!item.audioUrl) {
+    if (!audioContext) {
+      this.initAudio();
+    }
+    if (!audioContext) {
+      wx.showToast({ title: '音频初始化失败', icon: 'none' });
+      return;
+    }
+
+    const { id } = e.currentTarget.dataset as { id: string };
+    const item = this.data.list.find((s) => s._id === id) as (Sound & { audio?: string; fileUrl?: string; url?: string }) | undefined;
+    if (!item) {
+      wx.showToast({ title: '音频数据不存在', icon: 'none' });
+      return;
+    }
+
+    const audioUrl = this.getAudioUrl(item);
+    console.log('[AudioDebug] play tap raw item:', {
+      id: item._id,
+      title: item.title,
+      audioUrl: item.audioUrl,
+      audio: (item as any).audio,
+      fileUrl: (item as any).fileUrl,
+      url: (item as any).url,
+    });
+    console.log('[AudioDebug] play tap final audioUrl:', audioUrl);
+
+    if (!audioUrl) {
       wx.showToast({ title: '音频暂未上传', icon: 'none' });
       return;
     }
     
-    if (this.data.playingId === item._id && this.data.isPlaying) {
-      audioContext.pause();
-    } else {
-      audioContext.src = item.audioUrl;
-      audioContext.play();
-      this.setData({ playingId: item._id });
-      
-      api.reportEvent('sound_play', item._id);
+    const targetUrl = encodeURI(audioUrl);
+    console.log('[AudioDebug] encoded audioUrl:', targetUrl);
+    const currentUrl = (this as any)._currentAudioUrl || '';
+    const isSameAudio = currentUrl === targetUrl && this.data.playingId === item._id;
+
+    if (isSameAudio && this.data.isPlaying) {
+      if ((this as any)._audioSrcSet) {
+        audioContext.pause();
+      }
+      return;
     }
+
+    if (!isSameAudio) {
+      try {
+        if ((this as any)._audioSrcSet) {
+          audioContext.stop();
+        }
+      } catch (e) {
+        console.warn('stop audio failed, continue to reset src:', e);
+      }
+      audioContext.autoplay = true;
+      audioContext.src = targetUrl;
+      (this as any)._currentAudioUrl = targetUrl;
+      (this as any)._audioSrcSet = true;
+      this.setData({ playingId: item._id });
+      api.reportEvent('play', 'sound', item._id);
+      return;
+    }
+
+    audioContext.play();
+    this.setData({ playingId: item._id });
+    api.reportEvent('play', 'sound', item._id);
   },
 
   onItemTap(e: WechatMiniprogram.TouchEvent) {
@@ -183,14 +277,45 @@ Page({
   },
 
   onFavoriteTap(e: WechatMiniprogram.TouchEvent) {
-    const { item } = e.currentTarget.dataset as { item: Sound };
-    let favorites = wx.getStorageSync('sound_favorites') || [];
-    if (!favorites.includes(item._id)) {
-      favorites.push(item._id);
-      wx.setStorageSync('sound_favorites', favorites);
-      wx.showToast({ title: '已收藏', icon: 'success' });
-    } else {
-      wx.showToast({ title: '已在收藏中', icon: 'none' });
+    this.toggleFavorite(e);
+  },
+
+  async toggleFavorite(e: WechatMiniprogram.TouchEvent) {
+    const { item } = e.currentTarget.dataset as { item: Sound & { id?: string } };
+    const contentId = item._id || item.id;
+    if (!contentId) {
+      wx.showToast({ title: '参数错误', icon: 'none' });
+      return;
     }
+
+    try {
+      const checkRes = await api.checkFavorite('sound', contentId);
+      if (checkRes.code === ErrorCodes.SUCCESS && checkRes.data?.isFavorite && checkRes.data.favoriteId) {
+        const removeRes = await api.removeFavorite(checkRes.data.favoriteId);
+        if (removeRes.code === ErrorCodes.SUCCESS) {
+          wx.showToast({ title: '已取消收藏', icon: 'none' });
+          return;
+        }
+      }
+
+      const addRes = await api.addFavorite('sound', contentId);
+      if (addRes.code === ErrorCodes.SUCCESS) {
+        wx.showToast({ title: '已收藏', icon: 'success' });
+      } else if (addRes.code === ErrorCodes.NOT_LOGGED_IN || addRes.code === ErrorCodes.TOKEN_EXPIRED) {
+        wx.showToast({ title: '请先登录后再收藏', icon: 'none' });
+      } else {
+        wx.showToast({ title: addRes.message || '收藏失败', icon: 'none' });
+      }
+    } catch (err) {
+      console.error('Toggle sound favorite failed:', err);
+      wx.showToast({ title: '收藏失败', icon: 'none' });
+    }
+  },
+
+  onShareAppMessage() {
+    return {
+      title: '精选车机音效，快来试听',
+      path: '/pages/sound/index',
+    };
   },
 });

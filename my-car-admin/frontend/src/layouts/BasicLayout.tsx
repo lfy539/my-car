@@ -1,7 +1,7 @@
 import { Layout, Menu } from "antd";
 import { Link, Outlet, useNavigate } from "react-router-dom";
 
-const { Header, Content, Sider } = Layout;
+const { Header, Content, Sider, Footer } = Layout;
 
 export default function BasicLayout() {
   const navigate = useNavigate();
@@ -44,6 +44,11 @@ export default function BasicLayout() {
         <Content style={{ margin: 16 }}>
           <Outlet />
         </Content>
+        <Footer style={{ textAlign: "center", background: "#fff", color: "#666" }}>
+          <a href="https://beian.miit.gov.cn" target="_blank" rel="noreferrer" style={{ color: "#666" }}>
+            粤ICP备2026052453号
+          </a>
+        </Footer>
       </Layout>
     </Layout>
   );

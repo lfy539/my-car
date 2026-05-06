@@ -1,7 +1,8 @@
 const axios = require('axios');
 
-const API_BASE = process.env.ADMIN_API_BASE_URL || 'http://192.168.31.9:8000/api/v1';
+const API_BASE = process.env.ADMIN_API_BASE_URL || 'https://api.breakcode.top/api/v1';
 const PUBLIC_TOKEN = process.env.ADMIN_PUBLIC_TOKEN || '';
+const MEDIA_HOST = 'https://api.breakcode.top';
 
 function headers() {
   const h = {};
@@ -9,6 +10,24 @@ function headers() {
     h.Authorization = `Bearer ${PUBLIC_TOKEN}`;
   }
   return h;
+}
+
+function toHttpsMediaUrl(rawUrl) {
+  if (!rawUrl || typeof rawUrl !== 'string') return '';
+  if (rawUrl.startsWith('https://')) return rawUrl;
+  if (rawUrl.startsWith('http://')) return rawUrl.replace(/^http:\/\//, 'https://');
+  if (rawUrl.startsWith('//')) return `https:${rawUrl}`;
+  if (rawUrl.startsWith('/')) return `${MEDIA_HOST}${rawUrl}`;
+  return `${MEDIA_HOST}/${rawUrl}`;
+}
+
+function normalizeWallpaper(item) {
+  if (!item || typeof item !== 'object') return item;
+  return {
+    ...item,
+    coverUrl: toHttpsMediaUrl(item.coverUrl),
+    originUrl: toHttpsMediaUrl(item.originUrl),
+  };
 }
 
 exports.main = async (event, context) => {
@@ -38,10 +57,15 @@ async function getList({ page = 1, pageSize = 10, brandId, modelId, tags, sortBy
       },
     });
 
+    const normalized = {
+      ...data,
+      list: Array.isArray(data?.list) ? data.list.map(normalizeWallpaper) : [],
+    };
+
     return {
       code: 0,
       message: 'success',
-      data,
+      data: normalized,
       timestamp: Date.now(),
     };
   } catch (err) {
@@ -61,10 +85,11 @@ async function getDetail({ id }) {
       timeout: 10000,
     });
 
+    const normalized = normalizeWallpaper(data);
     return {
       code: 0,
       message: 'success',
-      data,
+      data: normalized,
       timestamp: Date.now(),
     };
   } catch (err) {

@@ -58,10 +58,10 @@
         <text class="action-icon">📥</text>
         <text class="action-text">保存到相册</text>
       </view>
-      <view class="action-btn" bindtap="onShare">
+      <button class="action-btn share-btn" open-type="share">
         <text class="action-icon">📤</text>
         <text class="action-text">分享</text>
-      </view>
+      </button>
     </view>
   </view>
 </view>

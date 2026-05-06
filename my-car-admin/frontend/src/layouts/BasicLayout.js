@@ -1,7 +1,7 @@
 import { jsx as _jsx, jsxs as _jsxs } from "react/jsx-runtime";
 import { Layout, Menu } from "antd";
 import { Link, Outlet, useNavigate } from "react-router-dom";
-const { Header, Content, Sider } = Layout;
+const { Header, Content, Sider, Footer } = Layout;
 export default function BasicLayout() {
     const navigate = useNavigate();
     return (_jsxs(Layout, { style: { minHeight: "100vh" }, children: [_jsxs(Sider, { children: [_jsx("div", { style: { color: "#fff", padding: 16, fontWeight: 600 }, children: "\u7BA1\u7406\u540E\u53F0" }), _jsx(Menu, { theme: "dark", mode: "inline", items: [
@@ -19,5 +19,5 @@ export default function BasicLayout() {
                         }, children: _jsx("a", { onClick: () => {
                                 localStorage.removeItem("admin_token");
                                 navigate("/login");
-                            }, children: "\u9000\u51FA\u767B\u5F55" }) }), _jsx(Content, { style: { margin: 16 }, children: _jsx(Outlet, {}) })] })] }));
+                            }, children: "\u9000\u51FA\u767B\u5F55" }) }), _jsx(Content, { style: { margin: 16 }, children: _jsx(Outlet, {}) }), _jsx(Footer, { style: { textAlign: "center", background: "#fff", color: "#666" }, children: _jsx("a", { href: "https://beian.miit.gov.cn", target: "_blank", rel: "noreferrer", style: { color: "#666" }, children: "\u7CA4ICP\u59072026052453\u53F7" }) })] })] }));
 }

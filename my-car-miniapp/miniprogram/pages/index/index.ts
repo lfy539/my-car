@@ -65,11 +65,16 @@ Page({
       const res = await api.getHomeData();
 
       if (res.code === ErrorCodes.SUCCESS) {
-        const { banners = [], brands = [] } = res.data || {};
+        const { banners = [], brands = [], hotSounds = [] } = res.data || {};
+        const normalizedHotSounds = (hotSounds as Array<Sound & { id?: string }>).map((item) => ({
+          ...item,
+          _id: item._id || item.id || '',
+        }));
         
         this.setData({
           banners,
           brands,
+          hotSounds: normalizedHotSounds,
           loading: false,
         });
         
@@ -119,5 +124,12 @@ Page({
   onSoundTap(e: WechatMiniprogram.TouchEvent) {
     const { item } = e.currentTarget.dataset;
     wx.switchTab({ url: '/pages/sound/index' });
+  },
+
+  onShareAppMessage() {
+    return {
+      title: '车机美化库 - 电车专属壁纸与音效',
+      path: '/pages/index/index',
+    };
   },
 });

@@ -37,29 +37,74 @@ Page({
   },
 
   async onLogin() {
-    const success = await userStore.login();
-    if (success) {
-      wx.showToast({ title: '登录成功', icon: 'success' });
+    this.onWechatLogin();
+  },
+
+  async onWechatLogin() {
+    try {
+      const profile = await wx.getUserProfile({
+        desc: '用于完善会员资料',
+      });
+
+      const success = await userStore.login();
+      if (!success) {
+        wx.showToast({ title: '登录失败，请稍后重试', icon: 'none' });
+        return;
+      }
+
+      const updateRes = await api.updateUserInfo({
+        nickname: profile.userInfo.nickName || '车机用户',
+        avatar: profile.userInfo.avatarUrl || '',
+      });
+
+      if (updateRes.code === ErrorCodes.SUCCESS && updateRes.data) {
+        userStore.setUser(updateRes.data);
+        wx.showToast({ title: '登录成功', icon: 'success' });
+        return;
+      }
+
+      wx.showToast({ title: updateRes.message || '登录成功，但资料同步失败', icon: 'none' });
+    } catch (err: any) {
+      if (err?.errMsg?.includes('cancel')) {
+        wx.showToast({ title: '你已取消授权', icon: 'none' });
+        return;
+      }
+      console.error('Wechat login failed:', err);
+      wx.showToast({ title: '微信授权失败', icon: 'none' });
     }
   },
 
   onChooseAvatar(e: WechatMiniprogram.ChooseAvatar) {
+    this.updateAvatar(e);
+  },
+
+  async updateAvatar(e: WechatMiniprogram.ChooseAvatar) {
     const { avatarUrl } = e.detail;
-    const userInfo: UserInfo = {
-      _id: 'local_' + Date.now(),
-      openId: 'local_' + Date.now(),
-      nickname: '车机用户',
-      avatar: avatarUrl,
-      phone: '',
-      createdAt: Date.now(),
-      updatedAt: Date.now(),
-    };
-    wx.setStorageSync('userInfo', userInfo);
-    this.setData({
-      isLoggedIn: true,
-      userInfo,
-    });
-    wx.showToast({ title: '登录成功', icon: 'success' });
+    try {
+      if (!this.data.isLoggedIn) {
+        const loginSuccess = await userStore.login();
+        if (!loginSuccess) {
+          wx.showToast({ title: '登录失败，请稍后重试', icon: 'none' });
+          return;
+        }
+      }
+
+      const state = userStore.getState();
+      const currentUser = state.userInfo;
+      const nickname = currentUser?.nickname || '车机用户';
+      const updateRes = await api.updateUserInfo({ nickname, avatar: avatarUrl });
+
+      if (updateRes.code === ErrorCodes.SUCCESS && updateRes.data) {
+        userStore.setUser(updateRes.data);
+        wx.showToast({ title: '头像更新成功', icon: 'success' });
+        return;
+      }
+
+      wx.showToast({ title: updateRes.message || '头像更新失败', icon: 'none' });
+    } catch (err) {
+      console.error('Update avatar failed:', err);
+      wx.showToast({ title: '头像更新失败', icon: 'none' });
+    }
   },
 
   onLogout() {
@@ -106,7 +151,7 @@ Page({
   },
 
   goToHistory() {
-    wx.showToast({ title: '浏览历史 - 开发中', icon: 'none' });
+    wx.navigateTo({ url: '/pages/mine/history/index' });
   },
 
   goToFeedback() {
@@ -127,5 +172,12 @@ Page({
       content: '我们重视您的隐私保护，详细隐私政策请访问官网查看。',
       showCancel: false,
     });
+  },
+
+  onShareAppMessage() {
+    return {
+      title: '车机美化库 - 让你的车机更有个性',
+      path: '/pages/index/index',
+    };
   },
 });

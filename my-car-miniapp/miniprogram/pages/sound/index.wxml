@@ -32,7 +32,7 @@
         wx:for="{{list}}"
         wx:key="_id"
       >
-        <view class="sound-cover" bindtap="onPlayTap" data-item="{{item}}">
+        <view class="sound-cover" bindtap="onPlayTap" data-id="{{item._id}}">
           <image class="cover-image" src="{{item.coverUrl}}" mode="aspectFill" />
           <view class="play-icon {{playingId === item._id && isPlaying ? 'playing' : ''}}">
             <text>{{playingId === item._id && isPlaying ? '⏸' : '▶'}}</text>

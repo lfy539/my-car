@@ -67,42 +67,35 @@ class UserStore {
         this.setUser(res.data);
         return true;
       }
-      
-      this.localLogin();
-      return true;
+
+      this.setState({ isLoading: false });
+      return false;
     } catch (e) {
       console.error('Login failed:', e);
-      this.localLogin();
-      return true;
+      this.setState({ isLoading: false });
+      return false;
     }
   }
 
-  localLogin() {
-    const userInfo: UserInfo = {
-      _id: 'local_' + Date.now(),
-      openId: 'local_' + Date.now(),
-      nickname: '车机用户',
-      avatar: '',
-      phone: '',
-      createdAt: Date.now(),
-      updatedAt: Date.now(),
-    };
-    this.setUser(userInfo);
-  }
-
   setUser(userInfo: UserInfo) {
+    const normalizedUser: UserInfo = {
+      ...userInfo,
+      openId: (userInfo as any).openId || (userInfo as any).openid || '',
+      unionId: (userInfo as any).unionId || (userInfo as any).unionid || '',
+    };
+
     this.setState({
-      userInfo,
+      userInfo: normalizedUser,
       isLoggedIn: true,
       isLoading: false,
     });
     
-    wx.setStorageSync('userInfo', userInfo);
-    wx.setStorageSync('token', userInfo._id);
+    wx.setStorageSync('userInfo', normalizedUser);
+    wx.setStorageSync('token', normalizedUser._id);
     
     try {
       const app = getApp<App.GlobalData>();
-      app.globalData.userInfo = userInfo;
+      app.globalData.userInfo = normalizedUser;
       app.globalData.isLoggedIn = true;
     } catch (e) {
       console.error('Set global data failed:', e);

@@ -1,0 +1,38 @@
+<view class="page-container">
+  <empty wx:if="{{list.length === 0}}" title="暂无浏览历史" description="浏览过的壁纸和音效会显示在这里" />
+
+  <view wx:else class="history-list">
+    <view
+      class="history-item"
+      wx:for="{{list}}"
+      wx:key="viewAt"
+      bindtap="onItemTap"
+      data-item="{{item}}"
+    >
+      <image class="item-cover" src="{{item.coverUrl}}" mode="aspectFill" />
+      <view class="item-info">
+        <text class="item-title">{{item.title}}</text>
+        <view class="item-meta">
+          <text class="item-type">{{item.type === 'wallpaper' ? '壁纸' : '音效'}}</text>
+          <text class="item-time">{{formatTime(item.viewAt)}}</text>
+        </view>
+      </view>
+    </view>
+  </view>
+
+  <view class="clear-btn" wx:if="{{list.length > 0}}" bindtap="onClearAll">
+    <text>清空浏览历史</text>
+  </view>
+</view>
+
+<wxs module="formatTime">
+module.exports = function(timestamp) {
+  if (!timestamp) return '';
+  var date = getDate(timestamp);
+  var month = date.getMonth() + 1;
+  var day = date.getDate();
+  var hour = date.getHours();
+  var minute = date.getMinutes();
+  return month + '/' + day + ' ' + (hour < 10 ? '0' : '') + hour + ':' + (minute < 10 ? '0' : '') + minute;
+}
+</wxs>

@@ -3,19 +3,22 @@
     <!-- 用户信息卡片 -->
     <view class="user-card">
       <view class="user-info" wx:if="{{isLoggedIn}}">
-        <view class="avatar-wrap">
-          <text class="avatar-emoji">👤</text>
-        </view>
+        <button class="avatar-btn" open-type="chooseAvatar" bindchooseavatar="onChooseAvatar">
+          <view class="avatar-wrap">
+            <image wx:if="{{userInfo && userInfo.avatar}}" class="avatar-image" src="{{userInfo.avatar}}" mode="aspectFill" />
+            <text wx:else class="avatar-emoji">👤</text>
+          </view>
+        </button>
         <view class="user-detail">
           <text class="user-name">{{userInfo.nickname || '车机用户'}}</text>
           <text class="user-id">欢迎使用车机美化库</text>
         </view>
       </view>
-      <button class="user-login" wx:else open-type="chooseAvatar" bindchooseavatar="onChooseAvatar">
+      <button class="user-login" wx:else bindtap="onWechatLogin">
         <view class="avatar-wrap login">
           <text class="avatar-emoji">👤</text>
         </view>
-        <text class="login-text">点击登录</text>
+        <text class="login-text">微信授权登录</text>
       </button>
     </view>
     

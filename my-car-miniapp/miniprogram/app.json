@@ -8,7 +8,8 @@
     "pages/sound/detail/index",
     "pages/mine/index",
     "pages/mine/favorites/index",
-    "pages/mine/downloads/index"
+    "pages/mine/downloads/index",
+    "pages/mine/history/index"
   ],
   "window": {
     "backgroundColor": "#0D1117",

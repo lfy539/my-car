@@ -78,10 +78,10 @@
         <text class="action-icon">📥</text>
         <text class="action-text">下载音效</text>
       </view>
-      <view class="action-btn" bindtap="onShare">
+      <button class="action-btn share-btn" open-type="share">
         <text class="action-icon">📤</text>
         <text class="action-text">分享</text>
-      </view>
+      </button>
     </view>
   </view>
 </view>

@@ -151,10 +151,18 @@ Page({
       const res = await api.search({ keyword });
       
       if (res.code === ErrorCodes.SUCCESS && res.data) {
+        const wallpapers = (res.data.wallpapers || []).map((item: Wallpaper & { id?: string }) => ({
+          ...item,
+          _id: item._id || item.id || '',
+        }));
+        const sounds = (res.data.sounds || []).map((item: Sound & { id?: string }) => ({
+          ...item,
+          _id: item._id || item.id || '',
+        }));
         this.setData({
           loading: false,
-          wallpaperResults: res.data.wallpapers,
-          soundResults: res.data.sounds,
+          wallpaperResults: wallpapers,
+          soundResults: sounds,
           totalCount: res.data.total,
         });
       } else {
@@ -221,5 +229,12 @@ Page({
   onSoundTap(e: WechatMiniprogram.TouchEvent) {
     const { id } = e.currentTarget.dataset;
     wx.navigateTo({ url: `/pages/sound/detail/index?id=${id}` });
+  },
+
+  onShareAppMessage() {
+    return {
+      title: '车机美化库 - 搜索你喜欢的壁纸和音效',
+      path: '/pages/search/index',
+    };
   },
 });

@@ -1,22 +1,9 @@
-import { recommendEngine } from '../../../utils/recommend';
-import { audioManager } from '../../../utils/audio-manager';
+import * as api from '../../../services/api';
+import { ErrorCodes } from '../../../utils/error-codes';
+import { appStore } from '../../../stores/app';
 
-const mockSounds: Record<string, Sound> = {
-  's1': { _id: 's1', title: '特斯拉锁车声', coverUrl: 'https://picsum.photos/400/400?random=20', audioUrl: '', brandId: '1', modelId: '', soundType: '锁车声', duration: 3, bitrate: 320, status: 1, publishAt: Date.now(), hotScore: 100 },
-  's2': { _id: 's2', title: '比亚迪迎宾音', coverUrl: 'https://picsum.photos/400/400?random=21', audioUrl: '', brandId: '2', modelId: '', soundType: '迎宾音', duration: 5, bitrate: 320, status: 1, publishAt: Date.now(), hotScore: 95 },
-  's3': { _id: 's3', title: '蔚来启动声', coverUrl: 'https://picsum.photos/400/400?random=22', audioUrl: '', brandId: '3', modelId: '', soundType: '启动声', duration: 4, bitrate: 320, status: 1, publishAt: Date.now(), hotScore: 90 },
-  's4': { _id: 's4', title: '小鹏解锁声', coverUrl: 'https://picsum.photos/400/400?random=23', audioUrl: '', brandId: '4', modelId: '', soundType: '解锁声', duration: 2, bitrate: 320, status: 1, publishAt: Date.now(), hotScore: 85 },
-  's5': { _id: 's5', title: '理想迎宾音', coverUrl: 'https://picsum.photos/400/400?random=24', audioUrl: '', brandId: '5', modelId: '', soundType: '迎宾音', duration: 4, bitrate: 320, status: 1, publishAt: Date.now(), hotScore: 80 },
-  's6': { _id: 's6', title: '零跑充电提示', coverUrl: 'https://picsum.photos/400/400?random=25', audioUrl: '', brandId: '6', modelId: '', soundType: '提示音', duration: 3, bitrate: 320, status: 1, publishAt: Date.now(), hotScore: 75 },
-};
-
-const allSounds = Object.values(mockSounds);
-
-const brandNames: Record<string, string> = {
-  '1': '特斯拉', '2': '比亚迪', '3': '蔚来', '4': '小鹏', '5': '理想', '6': '零跑',
-};
-
-const audioContext = wx.createInnerAudioContext();
+let audioContext: WechatMiniprogram.InnerAudioContext | null = null;
+const API_HOST = 'https://api.breakcode.top';
 
 Page({
   data: {
@@ -24,6 +11,7 @@ Page({
     sound: null as Sound | null,
     brandName: '',
     isFavorite: false,
+    favoriteId: '',
     isPlaying: false,
     currentTime: 0,
     duration: 0,
@@ -40,11 +28,20 @@ Page({
   },
 
   onUnload() {
-    audioContext.stop();
-    audioContext.destroy();
+    if (audioContext) {
+      audioContext.stop();
+      audioContext.destroy();
+      audioContext = null;
+    }
+    (this as any)._audioBound = false;
   },
 
   initAudio() {
+    if (!audioContext) {
+      audioContext = wx.createInnerAudioContext();
+    }
+    if ((this as any)._audioBound) return;
+
     audioContext.onPlay(() => {
       this.setData({ isPlaying: true });
     });
@@ -74,46 +71,136 @@ Page({
 
     audioContext.onError((err) => {
       console.error('Audio error:', err);
+      console.error('[AudioDebug][detail] current audioUrl:', this.data.sound?.audioUrl || '');
       this.setData({ isPlaying: false });
-      wx.showToast({ title: '播放失败', icon: 'none' });
+      wx.showToast({ title: `播放失败(${err?.errCode || '未知'})`, icon: 'none' });
+    });
+
+    (this as any)._audioBound = true;
+  },
+
+  async loadDetail(id: string) {
+    this.setData({ loading: true });
+    try {
+      await this.ensureBrandsLoaded();
+      const res = await api.getSoundDetail(id);
+      if (res.code !== ErrorCodes.SUCCESS || !res.data) {
+        throw new Error(res.message || '音效不存在');
+      }
+
+      const sound = res.data as Sound & { id?: string };
+      const contentId = sound._id || sound.id || id;
+      const normalizedSound = {
+        ...sound,
+        coverUrl: this.normalizeMediaUrl(sound.coverUrl),
+        audioUrl: this.normalizeMediaUrl(sound.audioUrl),
+      };
+      const favRes = await api.checkFavorite('sound', contentId);
+      const isFavorite = favRes.code === ErrorCodes.SUCCESS && !!favRes.data?.isFavorite;
+      const favoriteId = isFavorite ? favRes.data?.favoriteId || '' : '';
+      const brandName = this.resolveBrandName(sound);
+
+      this.setData({
+        sound: { ...normalizedSound, _id: contentId },
+        brandName,
+        duration: normalizedSound.duration,
+        loading: false,
+        isFavorite,
+        favoriteId,
+        similarList: [],
+      });
+      this.saveBrowseHistory({
+        type: 'sound',
+        id: contentId,
+        title: normalizedSound.title,
+        coverUrl: normalizedSound.coverUrl,
+      });
+      if (normalizedSound.audioUrl) {
+        if (!audioContext) this.initAudio();
+        if (!audioContext) throw new Error('audio init failed');
+        console.log('[AudioDebug][detail] set audioUrl:', normalizedSound.audioUrl);
+        audioContext.src = encodeURI(normalizedSound.audioUrl);
+      }
+    } catch (e) {
+      console.error('Load sound detail failed:', e);
+      wx.showToast({ title: '音效不存在', icon: 'none' });
+      this.setData({ loading: false });
+      setTimeout(() => wx.navigateBack(), 1500);
+    }
+  },
+
+  resolveBrandName(sound: Sound & { brandName?: string; brand?: { name?: string } }): string {
+    if (sound.brandName) return sound.brandName;
+    if (sound.brand?.name) return sound.brand.name;
+    const brands = appStore.getState().brands || [];
+    const matched = brands.find((b) => b._id === sound.brandId || b.name === sound.brandId);
+    return matched?.name || '未知';
+  },
+
+  async ensureBrandsLoaded() {
+    const brands = appStore.getState().brands || [];
+    if (brands.length > 0) return;
+    try {
+      const homeRes = await api.getHomeData();
+      if (homeRes.code === ErrorCodes.SUCCESS && homeRes.data?.brands?.length) {
+        appStore.setBrands(homeRes.data.brands);
+      }
+    } catch (e) {
+      console.warn('ensureBrandsLoaded failed:', e);
+    }
+  },
+
+  saveBrowseHistory(record: { type: 'wallpaper' | 'sound'; id: string; title: string; coverUrl: string }) {
+    const history = wx.getStorageSync('browse_history') || [];
+    const filtered = history.filter((item: any) => !(item.type === record.type && item.id === record.id));
+    filtered.unshift({ ...record, viewAt: Date.now() });
+    wx.setStorageSync('browse_history', filtered.slice(0, 200));
+  },
+
+  normalizeMediaUrl(rawUrl?: string): string {
+    if (!rawUrl) return '';
+    if (rawUrl.startsWith('https://')) return rawUrl;
+    if (rawUrl.startsWith('http://')) return rawUrl.replace(/^http:\/\//, 'https://');
+    if (rawUrl.startsWith('//')) return `https:${rawUrl}`;
+    if (rawUrl.startsWith('/')) return `${API_HOST}${rawUrl}`;
+    return `${API_HOST}/${rawUrl}`;
+  },
+
+  downloadAudio(url: string): Promise<string> {
+    return new Promise((resolve, reject) => {
+      wx.downloadFile({
+        url,
+        success: (res) => {
+          if (res.statusCode === 200 && res.tempFilePath) {
+            resolve(res.tempFilePath);
+            return;
+          }
+          reject(new Error(`download status ${res.statusCode}`));
+        },
+        fail: reject,
+      });
     });
   },
 
-  loadDetail(id: string) {
-    setTimeout(() => {
-      const sound = mockSounds[id];
-      if (sound) {
-        const similarList = recommendEngine.getSimilarSounds(sound, allSounds);
-        
-        const validUrls = similarList.filter(s => s.audioUrl).map(s => s.audioUrl);
-        if (validUrls.length > 0) {
-          audioManager.preload(validUrls);
-        }
-        
-        this.setData({
-          sound,
-          brandName: brandNames[sound.brandId] || '未知',
-          duration: sound.duration,
-          loading: false,
-          isFavorite: this.checkFavorite(id),
-          similarList,
-        });
-        if (sound.audioUrl) {
-          audioContext.src = sound.audioUrl;
-        }
-      } else {
-        wx.showToast({ title: '音效不存在', icon: 'none' });
-        setTimeout(() => wx.navigateBack(), 1500);
-      }
-    }, 300);
-  },
-
-  checkFavorite(id: string): boolean {
-    const favorites = wx.getStorageSync('sound_favorites') || [];
-    return favorites.includes(id);
+  saveAudioFile(tempFilePath: string): Promise<string> {
+    return new Promise((resolve, reject) => {
+      wx.saveFile({
+        tempFilePath,
+        success: (res) => resolve(res.savedFilePath),
+        fail: reject,
+      });
+    });
   },
 
   onPlayToggle() {
+    if (!audioContext) {
+      this.initAudio();
+    }
+    if (!audioContext) {
+      wx.showToast({ title: '音频初始化失败', icon: 'none' });
+      return;
+    }
+
     const { sound, isPlaying } = this.data;
     if (!sound || !sound.audioUrl) {
       wx.showToast({ title: '音频暂未上传', icon: 'none' });
@@ -127,6 +214,7 @@ Page({
   },
 
   onSeek(e: WechatMiniprogram.SliderChange) {
+    if (!audioContext) return;
     const { value } = e.detail;
     const { duration } = audioContext;
     if (duration > 0) {
@@ -135,51 +223,99 @@ Page({
     }
   },
 
-  onToggleFavorite() {
-    const { sound, isFavorite } = this.data;
+  async onToggleFavorite() {
+    const { sound, isFavorite, favoriteId } = this.data;
     if (!sound) return;
-
-    let favorites = wx.getStorageSync('sound_favorites') || [];
-    
-    if (isFavorite) {
-      favorites = favorites.filter((id: string) => id !== sound._id);
-      wx.showToast({ title: '已取消收藏', icon: 'none' });
-    } else {
-      favorites.push(sound._id);
-      wx.showToast({ title: '已收藏', icon: 'success' });
+    const contentId = sound._id;
+    try {
+      if (isFavorite && favoriteId) {
+        const res = await api.removeFavorite(favoriteId);
+        if (res.code === ErrorCodes.SUCCESS) {
+          this.setData({ isFavorite: false, favoriteId: '' });
+          wx.showToast({ title: '已取消收藏', icon: 'none' });
+          return;
+        }
+      } else {
+        const res = await api.addFavorite('sound', contentId);
+        if (res.code === ErrorCodes.SUCCESS) {
+          this.setData({ isFavorite: true });
+          wx.showToast({ title: '已收藏', icon: 'success' });
+          const favRes = await api.checkFavorite('sound', contentId);
+          if (favRes.code === ErrorCodes.SUCCESS && favRes.data?.favoriteId) {
+            this.setData({ favoriteId: favRes.data.favoriteId });
+          }
+          return;
+        }
+        if (res.code === ErrorCodes.NOT_LOGGED_IN || res.code === ErrorCodes.TOKEN_EXPIRED) {
+          wx.showToast({ title: '请先登录后再收藏', icon: 'none' });
+          return;
+        }
+      }
+      wx.showToast({ title: '操作失败', icon: 'none' });
+    } catch (e) {
+      console.error('Toggle sound favorite failed:', e);
+      wx.showToast({ title: '操作失败', icon: 'none' });
     }
-    
-    wx.setStorageSync('sound_favorites', favorites);
-    this.setData({ isFavorite: !isFavorite });
   },
 
   onDownload() {
     const { sound } = this.data;
     if (!sound) return;
+    if (!sound.audioUrl) {
+      wx.showToast({ title: '音频地址无效', icon: 'none' });
+      return;
+    }
 
     wx.showModal({
       title: '下载提示',
       content: '音效文件需要在车机系统中使用，确定下载吗？',
-      success: (res) => {
+      success: async (res) => {
         if (res.confirm) {
           wx.showLoading({ title: '下载中...' });
-          setTimeout(() => {
+          try {
+            const primary = this.normalizeMediaUrl(sound.audioUrl);
+            const urls = Array.from(
+              new Set(
+                [primary]
+                  .filter(Boolean)
+                  .flatMap((url) => (url.startsWith('http://') ? [url, url.replace(/^http:\/\//, 'https://')] : [url]))
+              )
+            );
+            let savedFilePath = '';
+            for (const url of urls) {
+              try {
+                const tempPath = await this.downloadAudio(url);
+                savedFilePath = await this.saveAudioFile(tempPath);
+                break;
+              } catch (err) {
+                console.warn('download sound failed with url:', url, err);
+              }
+            }
+
             wx.hideLoading();
-            wx.showToast({ title: '已保存到下载记录', icon: 'success' });
-            this.saveDownloadRecord(sound);
-          }, 1000);
+            if (!savedFilePath) {
+              wx.showToast({ title: '下载失败，请稍后重试', icon: 'none' });
+              return;
+            }
+            wx.showToast({ title: '下载成功', icon: 'success' });
+            this.saveDownloadRecord(sound, savedFilePath);
+          } catch (e) {
+            wx.hideLoading();
+            wx.showToast({ title: '下载失败', icon: 'none' });
+          }
         }
       },
     });
   },
 
-  saveDownloadRecord(sound: Sound) {
+  saveDownloadRecord(sound: Sound, localFilePath: string) {
     let downloads = wx.getStorageSync('download_records') || [];
     const record = {
       type: 'sound',
       id: sound._id,
       title: sound.title,
       coverUrl: sound.coverUrl,
+      localFilePath,
       downloadAt: Date.now(),
     };
     downloads.unshift(record);
@@ -205,7 +341,7 @@ Page({
 
   onSimilarTap(e: WechatMiniprogram.TouchEvent) {
     const { id } = e.currentTarget.dataset;
-    audioContext.stop();
+    if (audioContext) audioContext.stop();
     wx.redirectTo({ url: `/pages/sound/detail/index?id=${id}` });
   },
 });
