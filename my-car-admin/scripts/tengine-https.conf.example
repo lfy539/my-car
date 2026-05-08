@@ -1,0 +1,122 @@
+# my_car — Tengine / Nginx：HTTP 自动跳转 HTTPS + Let's Encrypt
+#
+# 域名与路径请按实际修改：
+#   - 前端：admin.breakcode.top  → root
+#   - API：  api.breakcode.top   → proxy + /media alias
+#   - 证书：若同一张证书含两个域名，两站可共用同一路径；若分开签，则分别写 ssl_certificate
+#
+# 证书申请（二选一，在宿主机执行，非容器内需视情况调整）：
+#
+#  1) Certbot + webroot（推荐：先临时用纯 80 配置起站，或仅开 .well-known）
+#     certbot certonly --webroot -w /var/www/certbot \
+#       -d admin.breakcode.top -d api.breakcode.top
+#
+#  2) Certbot Nginx 插件（需本机已装 nginx/tengine 且能 reload）
+#     certbot --nginx -d admin.breakcode.top -d api.breakcode.top
+#
+#  首次申请前：确保 DNS 已指向本机，80 端口可从外网访问。
+#  证书默认路径（Certbot）：
+#     /etc/letsencrypt/live/<主域名或首个域名>/fullchain.pem
+#     /etc/letsencrypt/live/<同上>/privkey.pem
+#
+#  续期：certbot renew（可 cron）后 nginx -s reload
+
+# ---------- ACME HTTP-01 验证（续期依赖；若用 certbot webroot 请把 -w 与此 root 一致）----------
+# 若暂不需要 webroot，可注释本 server，仅用 certbot --nginx；二选一即可。
+# server {
+#     listen 80;
+#     server_name admin.breakcode.top api.breakcode.top;
+#     location /.well-known/acme-challenge/ {
+#         root /var/www/certbot;
+#     }
+#     location / {
+#         return 301 https://$host$request_uri;
+#     }
+# }
+
+# ---------- admin.breakcode.top：仅跳转 HTTPS ----------
+server {
+    listen 80;
+    server_name admin.breakcode.top;
+    location /.well-known/acme-challenge/ {
+        root /var/www/certbot;
+    }
+    location / {
+        return 301 https://$host$request_uri;
+    }
+}
+
+# ---------- admin.breakcode.top：HTTPS 静态 ----------
+server {
+    listen 443 ssl http2;
+    server_name admin.breakcode.top;
+
+    # 若 admin / api 使用同一张多域名证书，两处路径相同即可
+    ssl_certificate     /etc/letsencrypt/live/admin.breakcode.top/fullchain.pem;
+    ssl_certificate_key /etc/letsencrypt/live/admin.breakcode.top/privkey.pem;
+
+    # Certbot 生成的推荐 TLS 参数（路径因系统而异；若无文件可删掉该行）
+    include /etc/letsencrypt/options-ssl-nginx.conf;
+    # ssl_dhparam /etc/letsencrypt/ssl-dhparams.pem;  # certbot 可生成，不存在则注释
+
+    add_header Strict-Transport-Security "max-age=31536000; includeSubDomains" always;
+
+    root /project/my-car/my-car-admin/frontend/dist;
+    index index.html;
+
+    location / {
+        try_files $uri $uri/ /index.html;
+    }
+
+    location ~* \.(js|css|png|jpg|jpeg|gif|ico|svg|woff2?)$ {
+        expires 7d;
+        add_header Cache-Control "public, immutable";
+    }
+}
+
+# ---------- api.breakcode.top：仅跳转 HTTPS ----------
+server {
+    listen 80;
+    server_name api.breakcode.top;
+    location /.well-known/acme-challenge/ {
+        root /var/www/certbot;
+    }
+    location / {
+        return 301 https://$host$request_uri;
+    }
+}
+
+# ---------- api.breakcode.top：HTTPS API + 媒体 ----------
+server {
+    listen 443 ssl http2;
+    server_name api.breakcode.top;
+
+    ssl_certificate     /etc/letsencrypt/live/admin.breakcode.top/fullchain.pem;
+    ssl_certificate_key /etc/letsencrypt/live/admin.breakcode.top/privkey.pem;
+
+    include /etc/letsencrypt/options-ssl-nginx.conf;
+    # ssl_dhparam /etc/letsencrypt/ssl-dhparams.pem;
+
+    add_header Strict-Transport-Security "max-age=31536000; includeSubDomains" always;
+
+    location /media/ {
+        alias /data/my-car/uploads/;
+        access_log off;
+    }
+
+    location /api/v1/ {
+        proxy_pass http://127.0.0.1:8000/api/v1/;
+        proxy_http_version 1.1;
+        proxy_set_header Host              $host;
+        proxy_set_header X-Real-IP         $remote_addr;
+        proxy_set_header X-Forwarded-For   $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+        proxy_connect_timeout 60s;
+        proxy_send_timeout 60s;
+        proxy_read_timeout 60s;
+    }
+
+    location / {
+        return 404;
+    }
+}
