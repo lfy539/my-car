@@ -2,6 +2,7 @@ import re
 
 from fastapi import APIRouter, HTTPException, Query
 
+from app.core.media import to_https_media_url
 from app.core.utils import now_ts
 from app.models.banner import Banner
 from app.models.brand import Brand
@@ -11,9 +12,15 @@ from app.models.wallpaper import Wallpaper
 router = APIRouter(prefix="/public", tags=["public"])
 
 
+_MEDIA_URL_FIELDS = ("coverUrl", "originUrl", "audioUrl", "imageUrl", "logo")
+
+
 def doc_to_dict(doc) -> dict:
     data = doc.model_dump()
     data["_id"] = str(doc.id)
+    for key in _MEDIA_URL_FIELDS:
+        if data.get(key):
+            data[key] = to_https_media_url(data[key])
     return data
 
 

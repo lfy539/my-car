@@ -18,20 +18,17 @@ Page({
     soundList: [] as FavoriteSound[],
   },
 
-  onLoad() {
-    this.loadFavorites();
-  },
-
   onShow() {
     this.loadFavorites();
   },
 
   async loadFavorites() {
+    if (this.data.loading) return;
     this.setData({ loading: true });
     try {
       const [wallpaperRes, soundRes] = await Promise.all([
-        api.getFavorites({ targetType: 'wallpaper', page: 1, pageSize: 100 }),
-        api.getFavorites({ targetType: 'sound', page: 1, pageSize: 100 }),
+        api.getFavorites({ targetType: 'wallpaper', page: 1, pageSize: 100 }, true),
+        api.getFavorites({ targetType: 'sound', page: 1, pageSize: 100 }, true),
       ]);
 
       const wallpaperFavs: FavoriteRecord[] =
@@ -42,7 +39,7 @@ Page({
       const [wallpaperList, soundList] = await Promise.all([
         Promise.all(
           wallpaperFavs.map(async (fav) => {
-            const detailRes = await api.getWallpaperDetail(fav.targetId);
+            const detailRes = await api.getWallpaperDetail(fav.targetId, true);
             if (detailRes.code === ErrorCodes.SUCCESS && detailRes.data) {
               const item = detailRes.data as Wallpaper & { id?: string };
               return {
@@ -56,7 +53,7 @@ Page({
         ),
         Promise.all(
           soundFavs.map(async (fav) => {
-            const detailRes = await api.getSoundDetail(fav.targetId);
+            const detailRes = await api.getSoundDetail(fav.targetId, true);
             if (detailRes.code === ErrorCodes.SUCCESS && detailRes.data) {
               const item = detailRes.data as Sound & { id?: string };
               return {

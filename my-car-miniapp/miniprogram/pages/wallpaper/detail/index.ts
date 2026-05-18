@@ -1,8 +1,14 @@
 import * as api from '../../../services/api';
 import { ErrorCodes } from '../../../utils/error-codes';
+import {
+  buildMediaDownloadUrls,
+  downloadImageToTempPath,
+  ensureAlbumPermission,
+  formatImageSaveError,
+  normalizeMediaUrl,
+  saveImageToAlbum,
+} from '../../../utils/media';
 import { appStore } from '../../../stores/app';
-
-const API_HOST = 'https://api.breakcode.top';
 
 Page({
   data: {
@@ -34,8 +40,8 @@ Page({
       const contentId = wallpaper._id || wallpaper.id || id;
       const normalizedWallpaper = {
         ...wallpaper,
-        coverUrl: this.normalizeMediaUrl(wallpaper.coverUrl),
-        originUrl: this.normalizeMediaUrl(wallpaper.originUrl || wallpaper.coverUrl),
+        coverUrl: normalizeMediaUrl(wallpaper.coverUrl),
+        originUrl: normalizeMediaUrl(wallpaper.originUrl || wallpaper.coverUrl),
       };
       const favRes = await api.checkFavorite('wallpaper', contentId);
       const isFavorite = favRes.code === ErrorCodes.SUCCESS && !!favRes.data?.isFavorite;
@@ -95,71 +101,6 @@ Page({
     }
   },
 
-  normalizeMediaUrl(rawUrl?: string): string {
-    if (!rawUrl) return '';
-    if (rawUrl.startsWith('https://')) return rawUrl;
-    if (rawUrl.startsWith('http://')) return rawUrl.replace(/^http:\/\//, 'https://');
-    if (rawUrl.startsWith('//')) return `https:${rawUrl}`;
-    if (rawUrl.startsWith('/')) return `${API_HOST}${rawUrl}`;
-    return `${API_HOST}/${rawUrl}`;
-  },
-
-  async ensureAlbumPermission(): Promise<boolean> {
-    return new Promise((resolve) => {
-      wx.getSetting({
-        success: (settingRes) => {
-          const scope = settingRes.authSetting['scope.writePhotosAlbum'];
-          if (scope === true || scope === undefined) {
-            resolve(true);
-            return;
-          }
-          wx.showModal({
-            title: '需要相册权限',
-            content: '保存图片需要相册权限，请前往设置开启。',
-            success: (modalRes) => {
-              if (!modalRes.confirm) {
-                resolve(false);
-                return;
-              }
-              wx.openSetting({
-                success: (openRes) => resolve(!!openRes.authSetting['scope.writePhotosAlbum']),
-                fail: () => resolve(false),
-              });
-            },
-            fail: () => resolve(false),
-          });
-        },
-        fail: () => resolve(false),
-      });
-    });
-  },
-
-  downloadImage(url: string): Promise<string> {
-    return new Promise((resolve, reject) => {
-      wx.downloadFile({
-        url,
-        success: (res) => {
-          if (res.statusCode === 200 && res.tempFilePath) {
-            resolve(res.tempFilePath);
-            return;
-          }
-          reject(new Error(`download status ${res.statusCode}`));
-        },
-        fail: reject,
-      });
-    });
-  },
-
-  saveImage(filePath: string): Promise<void> {
-    return new Promise((resolve, reject) => {
-      wx.saveImageToPhotosAlbum({
-        filePath,
-        success: () => resolve(),
-        fail: reject,
-      });
-    });
-  },
-
   saveBrowseHistory(record: { type: 'wallpaper' | 'sound'; id: string; title: string; coverUrl: string }) {
     const history = wx.getStorageSync('browse_history') || [];
     const filtered = history.filter((item: any) => !(item.type === record.type && item.id === record.id));
@@ -211,26 +152,24 @@ Page({
       return;
     }
 
-    const primary = this.normalizeMediaUrl(wallpaper.originUrl || wallpaper.coverUrl);
-    const fallback = this.normalizeMediaUrl(wallpaper.coverUrl);
-    const urls = Array.from(
-      new Set(
-        [primary, fallback]
-          .filter(Boolean)
-          .flatMap((url) => (url.startsWith('http://') ? [url, url.replace(/^http:\/\//, 'https://')] : [url]))
-      )
-    );
+    const urls = buildMediaDownloadUrls(wallpaper.originUrl || wallpaper.coverUrl, wallpaper.coverUrl);
+    if (urls.length === 0) {
+      wx.showToast({ title: '图片地址无效', icon: 'none' });
+      return;
+    }
 
     wx.showLoading({ title: '保存中...' });
+    let lastError: unknown = null;
     try {
       let saved = false;
       for (const url of urls) {
         try {
-          const tempPath = await this.downloadImage(url);
-          await this.saveImage(tempPath);
+          const tempPath = await downloadImageToTempPath(url);
+          await saveImageToAlbum(tempPath);
           saved = true;
           break;
         } catch (err) {
+          lastError = err;
           console.warn('save wallpaper failed with url:', url, err);
         }
       }
@@ -239,11 +178,11 @@ Page({
         wx.showToast({ title: '已保存到相册', icon: 'success' });
         this.saveDownloadRecord(wallpaper);
       } else {
-        wx.showToast({ title: '下载失败，请稍后重试', icon: 'none' });
+        wx.showToast({ title: formatImageSaveError(lastError), icon: 'none' });
       }
     } catch (e) {
       wx.hideLoading();
-      wx.showToast({ title: '下载失败', icon: 'none' });
+      wx.showToast({ title: formatImageSaveError(e), icon: 'none' });
     }
   },
 

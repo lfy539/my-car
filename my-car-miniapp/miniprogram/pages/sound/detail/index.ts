@@ -1,9 +1,16 @@
 import * as api from '../../../services/api';
 import { ErrorCodes } from '../../../utils/error-codes';
+import {
+  buildMediaDownloadUrls,
+  downloadFileToTempPath,
+  formatMediaDownloadError,
+  normalizeMediaUrl,
+  persistSoundFile,
+  shareDownloadedFile,
+} from '../../../utils/media';
 import { appStore } from '../../../stores/app';
 
 let audioContext: WechatMiniprogram.InnerAudioContext | null = null;
-const API_HOST = 'https://api.breakcode.top';
 
 Page({
   data: {
@@ -92,8 +99,8 @@ Page({
       const contentId = sound._id || sound.id || id;
       const normalizedSound = {
         ...sound,
-        coverUrl: this.normalizeMediaUrl(sound.coverUrl),
-        audioUrl: this.normalizeMediaUrl(sound.audioUrl),
+        coverUrl: normalizeMediaUrl(sound.coverUrl),
+        audioUrl: normalizeMediaUrl(sound.audioUrl),
       };
       const favRes = await api.checkFavorite('sound', contentId);
       const isFavorite = favRes.code === ErrorCodes.SUCCESS && !!favRes.data?.isFavorite;
@@ -155,41 +162,6 @@ Page({
     const filtered = history.filter((item: any) => !(item.type === record.type && item.id === record.id));
     filtered.unshift({ ...record, viewAt: Date.now() });
     wx.setStorageSync('browse_history', filtered.slice(0, 200));
-  },
-
-  normalizeMediaUrl(rawUrl?: string): string {
-    if (!rawUrl) return '';
-    if (rawUrl.startsWith('https://')) return rawUrl;
-    if (rawUrl.startsWith('http://')) return rawUrl.replace(/^http:\/\//, 'https://');
-    if (rawUrl.startsWith('//')) return `https:${rawUrl}`;
-    if (rawUrl.startsWith('/')) return `${API_HOST}${rawUrl}`;
-    return `${API_HOST}/${rawUrl}`;
-  },
-
-  downloadAudio(url: string): Promise<string> {
-    return new Promise((resolve, reject) => {
-      wx.downloadFile({
-        url,
-        success: (res) => {
-          if (res.statusCode === 200 && res.tempFilePath) {
-            resolve(res.tempFilePath);
-            return;
-          }
-          reject(new Error(`download status ${res.statusCode}`));
-        },
-        fail: reject,
-      });
-    });
-  },
-
-  saveAudioFile(tempFilePath: string): Promise<string> {
-    return new Promise((resolve, reject) => {
-      wx.saveFile({
-        tempFilePath,
-        success: (res) => resolve(res.savedFilePath),
-        fail: reject,
-      });
-    });
   },
 
   onPlayToggle() {
@@ -268,42 +240,57 @@ Page({
 
     wx.showModal({
       title: '下载提示',
-      content: '音效文件需要在车机系统中使用，确定下载吗？',
+      content: '音效将保存到小程序本地。如需导入车机，可下载后分享到「文件传输助手」。',
       success: async (res) => {
-        if (res.confirm) {
-          wx.showLoading({ title: '下载中...' });
-          try {
-            const primary = this.normalizeMediaUrl(sound.audioUrl);
-            const urls = Array.from(
-              new Set(
-                [primary]
-                  .filter(Boolean)
-                  .flatMap((url) => (url.startsWith('http://') ? [url, url.replace(/^http:\/\//, 'https://')] : [url]))
-              )
-            );
-            let savedFilePath = '';
-            for (const url of urls) {
-              try {
-                const tempPath = await this.downloadAudio(url);
-                savedFilePath = await this.saveAudioFile(tempPath);
-                break;
-              } catch (err) {
-                console.warn('download sound failed with url:', url, err);
-              }
-            }
+        if (!res.confirm) return;
 
-            wx.hideLoading();
-            if (!savedFilePath) {
-              wx.showToast({ title: '下载失败，请稍后重试', icon: 'none' });
-              return;
-            }
-            wx.showToast({ title: '下载成功', icon: 'success' });
-            this.saveDownloadRecord(sound, savedFilePath);
-          } catch (e) {
-            wx.hideLoading();
-            wx.showToast({ title: '下载失败', icon: 'none' });
-          }
+        const urls = buildMediaDownloadUrls(sound.audioUrl);
+        if (urls.length === 0) {
+          wx.showToast({ title: '音频地址无效', icon: 'none' });
+          return;
         }
+
+        wx.showLoading({ title: '下载中...' });
+        let lastError: unknown = null;
+        let savedFilePath = '';
+        let successUrl = '';
+
+        try {
+          for (const url of urls) {
+            try {
+              const tempPath = await downloadFileToTempPath(url);
+              savedFilePath = await persistSoundFile(tempPath, url, sound._id);
+              successUrl = url;
+              break;
+            } catch (err) {
+              lastError = err;
+              console.warn('download sound failed with url:', url, err);
+            }
+          }
+        } finally {
+          wx.hideLoading();
+        }
+
+        if (!savedFilePath) {
+          wx.showToast({ title: formatMediaDownloadError(lastError), icon: 'none' });
+          return;
+        }
+
+        this.saveDownloadRecord(sound, savedFilePath);
+        wx.showModal({
+          title: '下载成功',
+          content: '音效已保存。点击「分享文件」可发送到微信文件传输助手，再拷贝到车机使用。',
+          confirmText: '分享文件',
+          cancelText: '知道了',
+          success: (modalRes) => {
+            if (modalRes.confirm) {
+              shareDownloadedFile(savedFilePath).catch((shareErr) => {
+                console.warn('share sound file failed:', successUrl, shareErr);
+                wx.showToast({ title: '分享失败，文件已保存在小程序本地', icon: 'none' });
+              });
+            }
+          },
+        });
       },
     });
   },

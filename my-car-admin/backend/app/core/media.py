@@ -7,6 +7,18 @@ from PIL import Image
 from app.core.config import settings
 
 
+def to_https_media_url(raw_url: str) -> str:
+    if not raw_url or not isinstance(raw_url, str):
+        return raw_url or ""
+    if raw_url.startswith("https://"):
+        return raw_url
+    if raw_url.startswith("http://"):
+        return raw_url.replace("http://", "https://", 1)
+    if raw_url.startswith("//"):
+        return f"https:{raw_url}"
+    return raw_url
+
+
 def _resolve_local_media_path(media_url: str) -> Path | None:
     if not media_url:
         return None

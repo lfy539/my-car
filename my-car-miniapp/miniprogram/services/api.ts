@@ -62,8 +62,12 @@ export async function getWallpapers(params: {
   }>('api-wallpapers', { action: 'list', ...params });
 }
 
-export async function getWallpaperDetail(id: string) {
-  return request<Wallpaper>('api-wallpapers', { action: 'detail', id });
+export async function getWallpaperDetail(id: string, silent = false) {
+  return request<Wallpaper>(
+    'api-wallpapers',
+    { action: 'detail', id },
+    silent ? { showLoading: false, showError: false } : undefined
+  );
 }
 
 // ============================================
@@ -86,8 +90,12 @@ export async function getSounds(params: {
   }>('api-sounds', { action: 'list', ...params });
 }
 
-export async function getSoundDetail(id: string) {
-  return request<Sound>('api-sounds', { action: 'detail', id });
+export async function getSoundDetail(id: string, silent = false) {
+  return request<Sound>(
+    'api-sounds',
+    { action: 'detail', id },
+    silent ? { showLoading: false, showError: false } : undefined
+  );
 }
 
 // ============================================
@@ -102,17 +110,20 @@ export async function removeFavorite(id: string) {
   return request<null>('api-favorites', { action: 'remove', id });
 }
 
-export async function getFavorites(params: {
-  page?: number;
-  pageSize?: number;
-  targetType?: 'wallpaper' | 'sound';
-}) {
+export async function getFavorites(
+  params: {
+    page?: number;
+    pageSize?: number;
+    targetType?: 'wallpaper' | 'sound';
+  },
+  silent = false
+) {
   return request<{
     list: UserFavorite[];
     total: number;
     page: number;
     pageSize: number;
-  }>('api-favorites', { action: 'list', ...params });
+  }>('api-favorites', { action: 'list', ...params }, silent ? { showLoading: false, showError: false } : undefined);
 }
 
 export async function checkFavorite(targetType: 'wallpaper' | 'sound', targetId: string) {
